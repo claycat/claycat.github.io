@@ -1,7 +1,7 @@
 ---
 title: 영속성 까보기 (feat. 10분 테코톡)
 date: 2024-02-27 12:00:00 +/-TTTT
-categories:
+categories: ["JPA"]
 comments: true
 tags: ["JPA"]
 ---

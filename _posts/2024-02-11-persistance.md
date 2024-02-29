@@ -1,7 +1,7 @@
 ---
 title: 영속성 핥아보기
 date: 2024-01-24 12:00:00 +/-TTTT
-categories: 
+categories: ["JPA"]
 comments: true
 tags: 
 ---
