@@ -230,10 +230,10 @@ public class DeletePurchaseTicketsUseCase {
 
 특히 우려되는 점은 서비스에 대한 오염입니다.  
 적절한 책임의 분리를 하지 않고 모든 유틸리티 메소드들을 밀어넣는 용도로 ㅁㅁㅁService를 사용한다면  
-결국 재사용성이 떨어지는 거대객체가 될 확률이 높습니다.  
+결국 재사용성이 떨어지는 거대객체가 될 확률이 높습니다.
+
 이 글을 작성하면서 보니, 위 언급된 이미지에서의 PurchaseService 또한 Validation과 Find의 유틸리티 책임이 혼합되어있습니다.  
-PurchaseValidationService와 PurchaseFindService로 쪼개는게 더 적절하지 않을까? 라는 생각이 듭니다.  
-또 다시 이니시를 걸어야 겠네요.
+PurchaseValidationService와 PurchaseFindService로 쪼개는게 더 적절할 수도 있습니다.
 
 아쉬운 부분은 Hexagonal 과 Clean Architecture, Domain Driven Design등에 대해서 조금 더 깊은 이해를 했거나  
 경험이 있었다면 더 좋은 아키텍처가 있을 수도 있다는 것이었습니다.  
