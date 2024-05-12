@@ -7,21 +7,3 @@ search: false
 
 @import "minimal-mistakes/skins/{{ site.minimal_mistakes_skin | default: 'default' }}"; // skin
 @import "minimal-mistakes"; // main partials
-
-@font-face {
-  font-family: "D2Coding";
-  src: url("/assets/fonts/D2Coding-Ver1.3.2-20180524.ttf") format("truetype");
-  font-weight: normal;
-  font-style: normal;
-}
-pre {
-  tab-size: 4;
-  -moz-tab-size: 4;
-}
-
-.highlight {
-  margin: 0;
-  padding: 0.5em;
-  font-family: monospace !important;
-  line-height: 1.2;
-}
