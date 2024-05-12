@@ -1,0 +1,903 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="ko" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>CS 면접대비 - 프로그래밍 언어(자바) : Claycat</title>
+<meta name="description" content="❓Call by Value 와 Call by reference의 차이가 무엇인가요?">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="Claycat">
+<meta property="og:title" content="CS 면접대비 - 프로그래밍 언어(자바)">
+<meta property="og:url" content="http://localhost:4000/interview/ms_java1/">
+
+
+  <meta property="og:description" content="❓Call by Value 와 Call by reference의 차이가 무엇인가요?">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2024-02-24T12:00:00+09:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/interview/ms_java1/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Claycat",
+      "url": "http://localhost:4000/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Claycat Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+
+
+<link
+  rel="apple-touch-icon"
+  sizes="180x180"
+  href="/assets/images/favicons/apple-touch-icon.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="32x32"
+  href="/assets/images/favicons/favicon-32x32.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="16x16"
+  href="/assets/images/favicons/favicon-16x16.png"
+/>
+
+<link rel="shortcut icon" href="/assets/images/favicons/favicon.ico" />
+<meta name="apple-mobile-web-app-title" content="Claycat" />
+<meta name="application-name" content="Claycat" />
+<meta name="msapplication-TileColor" content="#da532c" />
+<meta
+  name="msapplication-config"
+  content="/assets/images/favicons/browserconfig.xml"
+/>
+<meta name="theme-color" content="#ffffff" />
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Claycat
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">토글 메뉴</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+         
+
+<div id="main" role="main">
+  
+
+
+  <article
+    class="page h-entry"
+    itemscope
+    itemtype="https://schema.org/CreativeWork"
+  >
+    <meta
+      itemprop="headline"
+      content="CS 면접대비 - 프로그래밍 언어(자바)"
+    /> <meta
+      itemprop="description"
+      content="❓Call by Value 와 Call by reference의 차이가 무엇인가요?"
+    /> <meta
+      itemprop="datePublished"
+      content="2024-02-24T12:00:00+09:00"
+    /> 
+
+    <div class="page__inner-wrap">
+      
+      <header>
+        
+        <h1 id="page-title" class="page__title" itemprop="headline">
+          <p>CS 면접대비 - 프로그래밍 언어(자바)</p>
+
+        </h1>
+         
+      </header>
+      
+
+      <section class="page__content e-content" itemprop="text">
+         <h3 id="call-by-value-와-call-by-reference의-차이가-무엇인가요">❓Call by Value 와 Call by reference의 차이가 무엇인가요?</h3>
+
+<blockquote>
+  <p>참고 : 현대의 CS개론에서 call by value 와 call by reference 에 대한 구분은<br />
+ 더이상 활발하게 이루어지지 않는다.<br />
+ Pass by reference로 정의되던 방식이 사용되는 경우가 드물기 때문.</p>
+</blockquote>
+
+<h3 id="value-와-variable의-차이는-무엇인가"><strong>Value</strong> 와 <strong>Variable</strong>의 차이는 무엇인가?</h3>
+
+<p>이 질문에 정확히 대답을 할 수 있어야 한다.</p>
+
+<ul>
+  <li><strong>Value</strong>(값)란, 표현식의 결과값을 의미한다</li>
+  <li><strong>Variable</strong>(변수)이란, <strong>value를</strong> 담는 그릇이다</li>
+  <li>즉 int arg = 1; 라는 표현식에서 value는 1, variable은 arg라고 볼 수 있다.</li>
+</ul>
+
+<h3 id="parameter-와-argument의-차이는-무엇인가"><strong>Parameter</strong> 와 <strong>Argument</strong>의 차이는 무엇인가?</h3>
+
+<ul>
+  <li>Parameter란 함수 호출을 위해 caller가 공급하는 <strong>variable</strong></li>
+  <li>Argument란 함수 호출에 사용되는 parameter에 제공되는 <strong>value</strong></li>
+</ul>
+
+<h3 id="call-by-value">Call by Value</h3>
+
+<p>Call by Value에서, 함수의 <strong>parameter</strong>들은 함수의 호출을 위해 함수의 <strong>argument</strong>로 초기화되어 <strong>새롭게 생성된 variable</strong>들이다.</p>
+
+<p><strong>“값”</strong>으로 초기화된 <strong>“변수”</strong> 들의 관계와 동일하다.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">another_variable</span> <span class="o">=</span> <span class="n">arg</span><span class="p">;</span>
+
+<span class="c1">//another_variable = 2; 가 arg에 영향을 주는가? 그렇지 않다.</span>
+</code></pre></div></div>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">foo</span><span class="p">(</span><span class="kt">int</span> <span class="n">param</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">param</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">bar</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">foo</span><span class="p">(</span><span class="n">arg</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="c1">// 해당 함수의 호출 결과는 일반적인 변수들의 관계와 동일하다</span>
+<span class="c1">// "새롭게 생성된 변수" 라는걸 기억하자 !</span>
+<span class="kt">int</span> <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">param</span> <span class="o">=</span> <span class="n">arg</span><span class="p">;</span>
+<span class="n">param</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="c1">// 이때 arg 와 param은 서로 다르다!</span>
+</code></pre></div></div>
+
+<h3 id="call-by-reference">Call by Reference</h3>
+
+<p>Call by reference에서는 함수의 <strong>parameter</strong>들은 단순히 “alias”로 취급된다.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">arg</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="c1">// foo 함수 진입</span>
+<span class="c1">// param 은 arg 랑 같네?</span>
+<span class="n">arg</span> <span class="cm">/* param */</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>여기까지 이해했다면 자바로 다시 돌아가보자</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">foo</span><span class="o">(</span><span class="nc">Dog</span> <span class="n">d</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Dog</span><span class="o">(</span><span class="s">"Fifi"</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="nc">Dog</span> <span class="n">aDog</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Dog</span><span class="o">(</span><span class="s">"Max"</span><span class="o">);</span>
+
+<span class="n">foo</span><span class="o">(</span><span class="n">aDog</span><span class="o">);</span>
+<span class="c1">// 함수 호출 이후 aDog가 가리키는 값은 여전히 "Max"이다</span>
+<span class="c1">// d 가 aDog의 alias로 작동하는가? 그렇지 않다.</span>
+
+</code></pre></div></div>
+
+<p>혹자는 이렇게 반론할지도 모른다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">foo</span><span class="o">(</span><span class="nc">Dog</span> <span class="n">d</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">d</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">"Fifi"</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="c1">// 개의 이름이 변경되었다.</span>
+</code></pre></div></div>
+
+<p>하지만 이것 또한 call by reference를 의미하는것은 아니다.<br />
+어디까지나 Dog 객체에 대한 “포인터”를 전달한것일 뿐, 실제 Dog 객체를 전달한 것이 아니기 때문이다.
+즉 “포인터” 와 “reference”는 서로 <strong>다른</strong> 개념이다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">foo</span><span class="o">(</span><span class="nc">Dog</span> <span class="n">someDog</span><span class="o">)</span> <span class="o">{</span>  <span class="c1">// AAA</span>
+    <span class="n">someDog</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">"Max"</span><span class="o">);</span>     <span class="c1">// BBB</span>
+    <span class="n">someDog</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Dog</span><span class="o">(</span><span class="s">"Fifi"</span><span class="o">);</span>  <span class="c1">// CCC</span>
+    <span class="n">someDog</span><span class="o">.</span><span class="na">setName</span><span class="o">(</span><span class="s">"Rowlf"</span><span class="o">);</span>   <span class="c1">// DDD</span>
+<span class="o">}</span>
+
+<span class="nc">Dog</span> <span class="n">myDog</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Dog</span><span class="o">(</span><span class="s">"Rover"</span><span class="o">);</span>
+<span class="n">foo</span><span class="o">(</span><span class="n">myDog</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>Dog객체가 메모리 주소 0x42에 있다고 가정해보자.</p>
+
+<ul>
+  <li>AAA
+    <ul>
+      <li>someDog라는 인자값이 0x42로 설정 (새로운 변수!)</li>
+    </ul>
+  </li>
+  <li>BBB
+    <ul>
+      <li>someDog는 포인터를 따라가면 Dog객체가 있는 0x42에 도달하고, 이름 변경을 요청</li>
+    </ul>
+  </li>
+  <li>CCC
+    <ul>
+      <li>someDog의 값은 0x74로 변경</li>
+    </ul>
+  </li>
+  <li>DDD
+    <ul>
+      <li>0x74에 있는 Dog객체의 이름 변경을 요청</li>
+    </ul>
+  </li>
+</ul>
+
+<p>함수 호출이 된 이후의 결과를 생각해보자
+myDog라는 변수가 변경되었는가? 그렇지 않다. 42를 유지하고 있다.</p>
+
+<h3 id="thinking-point">Thinking Point</h3>
+
+<blockquote>
+  <p>Java로 전형적인 swap함수를 작성할 수 있는가?</p>
+</blockquote>
+
+<p>설명이 많이 복잡했는데, “자바는 primitive의 경우 call by value, 이외는 call by reference 로 동작합니다”<br />
+라는 답변이 왜 잘못되었는 지 알 수 있길 바란다.</p>
+
+<p>출처</p>
+
+<ul>
+  <li>https://stackoverflow.com/a/34971934</li>
+  <li>https://www.javadude.com/articles/passbyvalue.htm</li>
+</ul>
+
+<p>&lt;/div&gt;&lt;/details&gt;</p>
+
+<h2 id="string-stringbuilder-stringbuffer">String, StringBuilder, StringBuffer</h2>
+
+<h3 id="string">String</h3>
+
+<p><code class="language-plaintext highlighter-rouge">String s = new String("Hello");</code></p>
+
+<p>안좋은 선언이라고 알려져 있는데, 왜 쓰지 말라는 걸까?</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">두</span> <span class="n">객체의</span> <span class="n">차이는</span> <span class="n">뭘까</span><span class="o">?</span>
+<span class="nc">String</span> <span class="n">s1</span> <span class="o">=</span> <span class="s">"Hello"</span><span class="o">;</span>
+<span class="nc">String</span> <span class="n">s2</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">String</span><span class="o">(</span><span class="s">"Hello"</span><span class="o">);</span>
+</code></pre></div></div>
+
+<details><summary>펼치기</summary><div>
+
+    <p>이유는 String의 특성에 있다.<br />
+자바의 String 객체는 <strong>불변객체</strong>이다.<br />
+덕분에 JVM은 굳이 동일한 내용을 가진 문자열들을 따로 힙에 저장하지 않고 <strong>String Pool</strong>이라는 곳에 하나만 저장하고 해당 문자열의 주소값만 전달하는 방식으로 메모리를 최적화할 수 있다.<br />
+이 과정을 “Interning” 이라고 한다.</p>
+
+    <p>반면 new String 의 문자열 생성자를 사용한 경우는 힙에 해당 문자열을 생성하게 되고, 서로 다른 주소값을 보유하게 된다.
+이로 인해 메모리 낭비가 이루어지기 때문에 피하는 것이 좋다.</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//자바의 String은 intern() 메소드를 제공한다</span>
+<span class="nc">String</span> <span class="n">s1</span> <span class="o">=</span> <span class="s">"Hello"</span><span class="o">;</span>
+<span class="nc">String</span> <span class="n">s2</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">String</span><span class="o">(</span><span class="s">"Hello"</span><span class="o">).</span><span class="na">intern</span><span class="o">();</span>
+<span class="c1">// 하지만 두 표현식이 동일하지는 않다.</span>
+<span class="c1">// intern() 메소드를 사용하더라도 힙에 올라간 메모리는 GC가 회수할때까지 남아있게 된다.</span>
+</code></pre></div>    </div>
+
+    <p><br /></p>
+
+    <blockquote>
+      <h4 id="string-pool--">String Pool 의 위치</h4>
+    </blockquote>
+
+    <p>Java7 이전까지는 String Pool이 고정된 크기를 가진 PermGen 영역에 존재하였다.<br />
+지나치게 많은 문자열들이 intern 될 경우, JVM이 OutOfMemoryError를 만들어내는 경우가 있어,<br />
+Java7 이후부터는 Heap 영역에 저장되도록 변경되었다.</p>
+
+    <blockquote>
+      <p>https://muratakkan.medium.com/understanding-and-using-the-java-string-pool-in-java-d60d3176716</p>
+    </blockquote>
+
+    <h3 id="stringbuffer--stringbuffer">StringBuffer &amp; StringBuffer</h3>
+
+    <p>String의 불변성은 앞서 말한 바와 같이 장점이 존재하지만, 단점 또한 존재한다.<br />
+바로 문자열 연산에 약하다는것인데, 문자열 두개를 더하는 연산같은 경우 불필요하게 두개의 문자열이 모두 Heap에 올라가야하는 비효율이 존재한다.</p>
+
+    <p>Java는 이 문제를 StringBuilder 와 StringBuffer라는 클래스를 두어 해결한다.<br />
+가변성을 보유한 StringBuilder 클래스는 append, reverse 등 다양한 mutate method를 제공한다.<br />
+또한, String 간의 연산 또한 연산자 오버로딩을 통해서 내부적으로는 StringBuilder를 사용한다.</p>
+
+  </div></details>
+
+<details><summary>StringBuffer와 StringBuilder의 차이는 무엇일까?</summary><div>
+
+    <p>StringBuffer의 경우, 동기화를 지원하며 이에 대한 tradeoff로 연산속도가 느리다.
+StringBuilder의 경우, 동기화를 지원하지 않지만, 연산속도가 빠르다.</p>
+
+  </div></details>
+
+<p><br /></p>
+
+<p>왜 이런 결과가 나올까?</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">String</span> <span class="n">str1</span><span class="o">=</span><span class="s">"str"</span><span class="o">;</span>
+<span class="nc">String</span> <span class="n">str2</span><span class="o">=</span><span class="s">"ing"</span><span class="o">;</span>
+<span class="nc">String</span> <span class="n">concat</span><span class="o">=</span><span class="n">str1</span><span class="o">+</span><span class="n">str2</span><span class="o">;</span>
+
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">concat</span><span class="o">==</span><span class="s">"string"</span><span class="o">);</span> <span class="c1">//false</span>
+
+<span class="n">vs</span>
+
+<span class="kd">final</span> <span class="nc">String</span> <span class="n">str1</span><span class="o">=</span><span class="s">"str"</span><span class="o">;</span>
+<span class="kd">final</span> <span class="nc">String</span> <span class="n">str2</span><span class="o">=</span><span class="s">"ing"</span><span class="o">;</span>
+<span class="nc">String</span> <span class="n">concat</span><span class="o">=</span><span class="n">str1</span><span class="o">+</span><span class="n">str2</span><span class="o">;</span>
+
+<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">concat</span><span class="o">==</span><span class="s">"string"</span><span class="o">);</span> <span class="c1">//true</span>
+</code></pre></div></div>
+
+<details><summary> 펼치기
+</summary><div>
+
+  </div></details>
+
+<p><br />
+<br /></p>
+
+<p>최적화 할 수 있을까?</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">String</span> <span class="n">s</span> <span class="o">=</span> <span class="s">""</span><span class="o">;</span>
+<span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+    <span class="n">s</span> <span class="o">+=</span> <span class="s">", "</span> <span class="o">+</span> <span class="n">i</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<details><summary> 펼치기
+</summary><div>
+
+  </div></details>
+
+<h2 id="접근제어자">❓접근제어자</h2>
+
+<ul>
+  <li>public : 어디서든 접근 가능</li>
+  <li>protected : 동일 패키지 + 상속받은 클래스 내부</li>
+  <li>default : 동일 패키지 내부</li>
+  <li>private : 동일 클래스 내부</li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="nn">tut02</span><span class="o">;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">CA</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="n">ia</span><span class="o">;</span>
+    <span class="kd">protected</span> <span class="kt">int</span> <span class="n">ib</span><span class="o">;</span>
+    <span class="kt">int</span> <span class="n">ic</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">id</span><span class="o">;</span>
+<span class="o">}</span>
+<span class="c1">//tut2 패키지 내의 클래스 CA 외부에서 접근 가능한 변수들은 ?</span>
+<span class="c1">//tut2 패키지 내의 클래스 CA 내부에서 접근 가능한 변수들은 ?</span>
+<span class="c1">//tut2 패키지 내의 클래스 CA를 상속받은 CAA 내부에서 접근 가능한 변수들은 ?</span>
+
+
+<span class="kn">package</span> <span class="nn">tut03</span><span class="o">;</span>
+<span class="kn">import</span> <span class="nn">tut02.CA</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Tut03</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="no">CA</span> <span class="n">a</span> <span class="o">=</span> <span class="k">new</span> <span class="no">CA</span><span class="o">();</span> <span class="o">-&gt;</span> <span class="n">여기서</span> <span class="n">접근</span> <span class="n">가능한</span> <span class="n">변수들은</span><span class="o">?</span>
+        <span class="no">CC</span> <span class="n">c</span> <span class="o">=</span> <span class="k">new</span> <span class="no">CC</span><span class="o">();</span> <span class="o">-&gt;</span> <span class="n">여기서</span> <span class="n">접근</span> <span class="n">가능한</span> <span class="n">변수들은</span><span class="o">?</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<details>
+<summary>해답</summary>
+<div>
+
+    <ol>
+      <li>ia, ib, ic</li>
+      <li>ia, ib, ic, id</li>
+      <li>ia, ib, ic</li>
+    </ol>
+
+    <p><strong>같은 패키지 내에서는 public protected default가 같은 효과를 갖는다!</strong></p>
+
+  </div>
+</details>
+
+<h2 id="lambda--stream">❓Lambda &amp; Stream</h2>
+
+<p>자바스크립트를 접해봤다면 함수형 패러다임을 구현하는데 유용한 map, reduce, filter등의 유용한 메소드들에 익숙할 것이다.<br />
+자바도 버전 8부터 Lambda 익명함수들을 지원하기 시작했다.</p>
+
+<p>Priority Queue의 구현이나 Custom sort 등에서 이미 많이 사용하는걸 보았을 것이다</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Instead of this</span>
+<span class="nc">Collections</span><span class="o">.</span><span class="na">sort</span><span class="o">(</span><span class="n">listDevs</span><span class="o">,</span> <span class="k">new</span> <span class="nc">Comparator</span><span class="o">&lt;</span><span class="nc">Developer</span><span class="o">&gt;()</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">compare</span><span class="o">(</span><span class="nc">Developer</span> <span class="n">o1</span><span class="o">,</span> <span class="nc">Developer</span> <span class="n">o2</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">o1</span><span class="o">.</span><span class="na">getAge</span><span class="o">()</span> <span class="o">-</span> <span class="n">o2</span><span class="o">.</span><span class="na">getAge</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">});</span>
+<span class="c1">//We can do this</span>
+<span class="n">listDevs</span><span class="o">.</span><span class="na">sort</span><span class="o">((</span><span class="n">o1</span><span class="o">,</span> <span class="n">o2</span><span class="o">)-&gt;</span><span class="n">o1</span><span class="o">.</span><span class="na">getAge</span><span class="o">()-</span><span class="n">o2</span><span class="o">.</span><span class="na">getAge</span><span class="o">());</span>
+</code></pre></div></div>
+
+<p>자바스크립트에서 이런 코드를 본적이 있을것이다.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nf">calculate</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">operatorFunction</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nf">operatorFunction</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kd">function</span> <span class="nf">add</span><span class="p">(</span><span class="nx">a</span><span class="p">,</span> <span class="nx">b</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">a</span> <span class="o">+</span> <span class="nx">b</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nf">calculate</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">add</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>자바스크립트는 함수가 일급객체이기때문에 아무 조작 없이 해당 코드가 실행 가능하다.<br />
+하지만 엄격한 자바의 세계에서는 그렇지 않다.<br />
+람다식을 사용하기 위해서는 어떤게 필요할까?</p>
+
+<h3 id="함수형-인터페이스"><strong>함수형 인터페이스</strong></h3>
+
+<p>단 하나의 추상 메소드만 정의되어있는 인터페이스를 함수형 인터페이스라고 부른다</p>
+
+<p>람다식으로 사용하기 위해서는 대상이 함수형 인터페이스여야만 한다<br />
+이유는 당연하게도(?) 메소드가 하나만 있어야 람다식이 수행하는 대상을 알 수 있기 때문이다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@FunctionalInterface</span>
+<span class="kd">interface</span> <span class="nc">OperatorFunction</span> <span class="o">{</span>
+    <span class="kt">int</span> <span class="nf">operate</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">calculate</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">,</span> <span class="nc">OperatorFunction</span> <span class="n">operatorFunction</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="n">operatorFunction</span><span class="o">.</span><span class="na">operate</span><span class="o">(</span><span class="n">x</span><span class="o">,</span> <span class="n">y</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kt">int</span> <span class="n">result1</span> <span class="o">=</span> <span class="n">calculate</span><span class="o">(</span><span class="mi">1</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="o">(</span><span class="n">a</span><span class="o">,</span> <span class="n">b</span><span class="o">)</span> <span class="o">-&gt;</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>매번 유사한 함수형 인터페이스를 선언하는건 번거롭기때문에 자바에서는 util 패키지에서 사전에 정의된 인터페이스들을 제공한다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//example : IntBinaryOperator를 사용하면 굳이 정의안해도 됨</span>
+
+<span class="c1">//package java.util.function</span>
+<span class="nd">@FunctionalInterface</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">IntBinaryOperator</span> <span class="o">{</span>
+
+    <span class="cm">/**
+     * Applies this operator to the given operands.
+     *
+     * @param left the first operand
+     * @param right the second operand
+     * @return the operator result
+     */</span>
+    <span class="kt">int</span> <span class="nf">applyAsInt</span><span class="o">(</span><span class="kt">int</span> <span class="n">left</span><span class="o">,</span> <span class="kt">int</span> <span class="n">right</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">calculate</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">,</span> <span class="nc">IntBinaryOperator</span> <span class="n">operator</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">operator</span><span class="o">.</span><span class="na">applyAsInt</span><span class="o">(</span><span class="n">x</span><span class="o">,</span> <span class="n">y</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>돌이켜보면 Sort에서 람다를 사용할 때는 별도의 인터페이스를 선언하지 않았다. 왜일까?<br />
+이유는 Sort 메소드의 두번째 인자인 Comparable<T>가 compare라는 하나의 메소드를 가진
+함수형 인터페이스이기 때문이다.</T></p>
+
+<h2 id="wrappper-class">❓Wrappper Class</h2>
+
+<p>자바에서는 일반적으로 알려진 Primitive Type들 (int, boolean, char … )
+에 대해서 Wrapper 클래스들을 제공한다.</p>
+
+<blockquote>
+  <h4 id="똑같은-자료형인거같은데-왜-필요할까">똑같은 자료형인거같은데, 왜 필요할까?</h4>
+</blockquote>
+
+<ul>
+  <li>ArrayList 등의 Collection 프레임워크들은 객체들의 메모리 위치를 저장하기 때문이다
+    <ul>
+      <li>실제로 ArrayList 구현의 생성자를 보면 다음 코드가 들어있다
+        <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">ArrayList</span><span class="o">(</span><span class="kt">int</span> <span class="n">initialCapacity</span><span class="o">)</span> <span class="o">{</span>
+<span class="kd">super</span><span class="o">();</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">initialCapacity</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalArgumentException</span><span class="o">(</span><span class="s">"Illegal Capacity: "</span><span class="o">+</span>
+                                        <span class="n">initialCapacity</span><span class="o">);</span>
+<span class="k">this</span><span class="o">.</span><span class="na">elementData</span> <span class="o">=</span> <span class="o">(</span><span class="no">E</span><span class="o">[])</span><span class="k">new</span> <span class="nc">Object</span><span class="o">[</span><span class="n">initialCapacity</span><span class="o">];</span>
+<span class="o">}</span>
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li>멀티쓰레딩의 동기화 지원</li>
+  <li>null 값의 존재</li>
+  <li>값 컨텍스트가 초래하는 영향
+    <ul>
+      <li>한번 값을 사용하면 어딘가에서는 계속 필요</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="overriding--overloading">❓Overriding &amp; Overloading</h2>
+
+<ul>
+  <li>
+    <p>superclass 에 이미 존재하는 메소드를 subclass에서 동일한 이름으로 사용하고 싶지만, 구현체는 바꾸고 싶을 경우 Overriding을 사용</p>
+  </li>
+  <li>
+    <p>Overloading은 superclass에 존재하지 않는 새로운 메서드를 subclass에서 선언하는것을 의미</p>
+  </li>
+</ul>
+
+<p>생각해볼거리</p>
+
+<ul>
+  <li>왜 자바는 static method에 대한 오버라이딩을 허용하지 않을까?</li>
+  <li>왜 자바는 operator overloading이 없을까?</li>
+</ul>
+ 
+      </section>
+
+      <footer class="page__meta">
+         
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> 카테고리: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#interview" class="page__taxonomy-item p-category" rel="tag">Interview</a>
+    
+    </span>
+  </p>
+
+ 
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> 업데이트:</strong> <time class="dt-published" datetime="2024-02-24T12:00:00+09:00">February 24, 2024</time></p>
+
+      </footer>
+      
+  <nav class="pagination">
+    
+      <a href="/interview/ms_container/" class="pagination--pager" title="CS 면접대비 - 컨테이너
+">이전</a>
+    
+    
+      <a href="/jpa/persistance2/" class="pagination--pager" title="영속성 까보기 (feat. 10분 테코톡)
+">다음</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+   
+  <div class="page__related">
+    <h2 class="page__related-title">
+      참고
+    </h2>
+    <div class="grid__wrapper">
+       
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/tiketeer/concurrency/" rel="permalink">티케팅 시스템 구현에서의 동시성 문제 : 원인
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> April 02 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">개요
+</p>
+  </article>
+</div>
+  
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/tiketeer/architecture/" rel="permalink">스프링 코드 아키텍처
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> March 25 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">작성자 : Claycat
+
+개요
+
+여러분들의 백엔드 프로젝트 아키텍처는 어떤가요?
+
+이번에 지인들과 함께 Java/스프링 기반의 사이드 프로젝트를 진행하고 있습니다.
+프로젝트를 진행하던 중 초기 아키텍처 및 디렉토리 구조에 대해서 많은 고민이 있었는데요.
+결정 과정에 대해서 소개해...</p>
+  </article>
+</div>
+  
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/%EA%B0%9D%EC%B2%B4%EC%A7%80%ED%96%A5/isp1/" rel="permalink">인터페이스 분리 원칙에 대해
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> February 27 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">다 알고 있는 사실
+
+  어떤 코드도 자신이 사용하지 않는 메소드에 의존하면 안된다
+자신이 사용하는 메서드에만 의존해야 한다
+
+
+매번 나오는 설명입니다.
+보통 이야기를 들어도 잘 이해가 안가기 때문에 보통 예제를 봅니다.
+
+interface Person {
+	public void ...</p>
+  </article>
+</div>
+  
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/jpa/persistance2/" rel="permalink">영속성 까보기 (feat. 10분 테코톡)
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> February 27 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">JPA와 영속성
+
+JPA 영속성 관련 실험 중 이상한 케이스를 발견했습니다.
+우아한형제들 테코톡의 문제상황 1에서도 비슷한 예제가 있습니다.
+영상에서는 정확히 이유를 설명하지는 않고 영속성 설명으로 넘어가버려서
+정확한 이유를 정리해보려고 합니다.
+
+@Getter
+@Entity
+@A...</p>
+  </article>
+</div>
+ 
+    </div>
+  </div>
+   
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="검색어를 입력하세요..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>팔로우:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://github.com/claycat" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> 피드</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2024 Claycat. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+    <script>
+  'use strict';
+
+  (function () {
+    var commentContainer = document.querySelector('#giscus-comments');
+
+    if (!commentContainer) {
+      return;
+    }
+
+    var script = document.createElement('script');
+    script.setAttribute('src', 'https://giscus.app/client.js');
+    script.setAttribute('data-repo', 'claycat');
+    script.setAttribute('data-repo-id', 'R_kgDOLLYTXw');
+    script.setAttribute('data-category', '');
+    script.setAttribute('data-category-id', 'DIC_kwDOLLYTX84Ccyz5');
+    script.setAttribute('data-mapping', 'pathname');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-theme', 'light');
+    script.setAttribute('crossorigin', 'anonymous');
+
+    commentContainer.appendChild(script);
+  })();
+</script>
+  
+
+
+
+
+
+  </body>
+</html>

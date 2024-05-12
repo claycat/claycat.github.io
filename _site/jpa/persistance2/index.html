@@ -1,0 +1,640 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="ko" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>영속성 까보기 (feat. 10분 테코톡) : Claycat</title>
+<meta name="description" content="JPA와 영속성  JPA 영속성 관련 실험 중 이상한 케이스를 발견했습니다. 우아한형제들 테코톡의 문제상황 1에서도 비슷한 예제가 있습니다. 영상에서는 정확히 이유를 설명하지는 않고 영속성 설명으로 넘어가버려서 정확한 이유를 정리해보려고 합니다.  @Getter @Entity @AllArgsConstructor @NoArgsConstructor(access = AccessLevel.PROTECTED) public class Person {     @Id     @GeneratedValue(strategy = GenerationType.IDENTITY)     private Long id;      private String name;      public Person(String name) {         this.name = name;     } }   @DataJpaTest @TestMethodOrder(MethodOrderer.OrderAnnotation.class) class PersonRepositoryTest {     @Autowired     private PersonRepository personRepository;      private static final Person JOHN = new Person(&quot;John&quot;);       @Test // Test 1     @Order(1)     void saveAndCompare() {         Person person = personRepository.save(JOHN);         assertThat(person).isEqualTo(JOHN);     }      @Test // Test 2     @Order(2)     void find() {         Person person = personRepository.save(JOHN);         assertThat(person).isEqualTo(JOHN);     }  }   결과 위에 작성되어있는 Person 클래스의 테스트 코드인 Test1 과 Test2를 각자 돌렸을 때는 성공하지만,   동시에 돌리게 되면 실패합니다.  일반적으로 @DataJpaTest에는 @Transactional이 달려있기 때문에, 하위 테스트들 모두에 @Transactional이 적용됩니다 @Transactional이 걸린 테스트들은 테스트 마지막에 rollback이 된다는 사실도 알고 있죠. 트랜잭션이 롤백되면 영속성 컨텍스트도 초기화되어 직관적으로는 두개 다 성공하거나 두개 다 실패해야 할 꺼라고 생각되는데, 왜 둘 중 하나만 성공하는걸까요?  영속성 컨텍스트가 동기화가 되지 않은걸까요? 하지만 em.flush() 와 em.clear()을 Test1 마지막에 추가하더라도  결과가 동일한것을 볼 수 있을 것입니다.  왜 실패하는지 그 이유에 대해 단계별로 쪼개서 알아보도록 합시다.  Test 1 에서는 어떤일이 일어나는가 Person person = personRepository.save(JOHN);  단 한줄입니다  save 메소드의 내부 코드를 간단하게 살펴보면 다음과 같습니다 (분량상 몇줄 생략)  @Transactional public &lt;S extends T&gt; S save(S entity) {     if (entityInformation.isNew(entity)) {         entityManager.persist(entity);         return entity;     } else {         return entityManager.merge(entity);     } }   아무것도 없는 상태에서 테스트 1을 수행했기 때문에,  영속성 컨텍스트에 해당 엔티티가 존재하는지 확인하는 isNew 의 결과에 따라서 분기가 갈립니다.  간단하게 isNew메소드의 구현을 보면 아래와 같습니다  public boolean isNew(T entity) {     ID id = getId(entity);     Class&lt;ID&gt; idType = getIdType();          if (!idType.isPrimitive()) {         return id == null;     }          if (id instanceof Number) {         return ((Number) id).longValue() == 0L;     } }   id의 타입이 원시타입이 아니라면 null일 때 true 입니다. 따라서 isNew는 true를 반환합니다  (Long은 wrapper 클래스이기때문에 원시타입이 아닙니다.)  이후 entityManager.persist 메소드 호출을 통해서 해당 엔티티는 영속성 컨텍스트에 등록됩니다. 인자로 넘긴 값을 그대로 반환하기 때문에 당연히 첫 assert는 성공합니다  영속성 컨텍스트와 롤백  첫번째 테스트가 종료되었습니다. 첫번째 테스트가 롤백되면, 데이터베이스에 저장되어있는 JOHN 엔티티는 사라질 것입니다. 마찬가지로, 영속성 컨텍스트 또한 초기화되면서 내부의 엔티티들은 detached 상태로 전환됩니다    transaction rollback causes all pre-existing managed instances and removed instances [31] to become detached [JSR-000317 Persistence Specification for Eval 2.0 Eval]   간단하게 em.contains(JOHN) 과 personRepository.find(JOHN)을 통해서 확인할 수 있고, 예상대로 둘다 false를 반환합니다.  하지만 id는 어떨까요?  Test2의 첫번째 줄에 JOHN.getId()를 하면 null 이 아닌 1이 출력되는것을 확인할 수 있습니다. 트랜잭션이 롤백되더라도 in-memory로 올라가있는 static 객체인 JOHN에 추가된 id는 회수되지 않는것입니다. 그리고 이게 두번째 테스트가 실패하는 원인입니다.  다시 save로 돌아가봅시다. 마찬가지로 isNew 까지 들어가는데, 이번에는 id 가 null이 아니기 때문에 em.merge()를 호출합니다. em.merge는 반환할 때 새로운 영속상태의 엔티티를 생성해서 반환합니다.  (주의:전달된 인자가 영속상태로 관리되는것이 아니라, 영속상태로 관리되는 새로운 객체를 반환) (em.contains(JOHN)을 해본다면 false가 출력됩니다)  즉, JOHN과는 전혀 다른, 영속상태로 관리되는 객체를 의미하는것입니다. 따라서 assert문은 실패하게 됩니다.  테스트간 엔티티를 공유하는것이 문제가 될 수 있는 시나리오였습니다. 이상입니다.  부록 - 왜 id는 트랜잭션이 롤백되더라도 회수되지 않는가? id는 왜 롤백되더라도 원래 상태로 복구되지 않습니다. 즉 id에 대한 값 부여는 트랜잭션과 별도로 일어나는 작업입니다. 왜 그럴까요? 만약 진행중인 트랜잭션이 끝나지 않고 5분동안 락을 소유하게 된다면 해당 테이블에 값을 레코드를 추가하고 싶은 다른 트랜잭션들의 작업이 모두 막히기 때문입니다.    from StackOverflow, Vlad Mihalcea">
+
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="Claycat">
+<meta property="og:title" content="영속성 까보기 (feat. 10분 테코톡)">
+<meta property="og:url" content="http://localhost:4000/jpa/persistance2/">
+
+
+  <meta property="og:description" content="JPA와 영속성  JPA 영속성 관련 실험 중 이상한 케이스를 발견했습니다. 우아한형제들 테코톡의 문제상황 1에서도 비슷한 예제가 있습니다. 영상에서는 정확히 이유를 설명하지는 않고 영속성 설명으로 넘어가버려서 정확한 이유를 정리해보려고 합니다.  @Getter @Entity @AllArgsConstructor @NoArgsConstructor(access = AccessLevel.PROTECTED) public class Person {     @Id     @GeneratedValue(strategy = GenerationType.IDENTITY)     private Long id;      private String name;      public Person(String name) {         this.name = name;     } }   @DataJpaTest @TestMethodOrder(MethodOrderer.OrderAnnotation.class) class PersonRepositoryTest {     @Autowired     private PersonRepository personRepository;      private static final Person JOHN = new Person(&quot;John&quot;);       @Test // Test 1     @Order(1)     void saveAndCompare() {         Person person = personRepository.save(JOHN);         assertThat(person).isEqualTo(JOHN);     }      @Test // Test 2     @Order(2)     void find() {         Person person = personRepository.save(JOHN);         assertThat(person).isEqualTo(JOHN);     }  }   결과 위에 작성되어있는 Person 클래스의 테스트 코드인 Test1 과 Test2를 각자 돌렸을 때는 성공하지만,   동시에 돌리게 되면 실패합니다.  일반적으로 @DataJpaTest에는 @Transactional이 달려있기 때문에, 하위 테스트들 모두에 @Transactional이 적용됩니다 @Transactional이 걸린 테스트들은 테스트 마지막에 rollback이 된다는 사실도 알고 있죠. 트랜잭션이 롤백되면 영속성 컨텍스트도 초기화되어 직관적으로는 두개 다 성공하거나 두개 다 실패해야 할 꺼라고 생각되는데, 왜 둘 중 하나만 성공하는걸까요?  영속성 컨텍스트가 동기화가 되지 않은걸까요? 하지만 em.flush() 와 em.clear()을 Test1 마지막에 추가하더라도  결과가 동일한것을 볼 수 있을 것입니다.  왜 실패하는지 그 이유에 대해 단계별로 쪼개서 알아보도록 합시다.  Test 1 에서는 어떤일이 일어나는가 Person person = personRepository.save(JOHN);  단 한줄입니다  save 메소드의 내부 코드를 간단하게 살펴보면 다음과 같습니다 (분량상 몇줄 생략)  @Transactional public &lt;S extends T&gt; S save(S entity) {     if (entityInformation.isNew(entity)) {         entityManager.persist(entity);         return entity;     } else {         return entityManager.merge(entity);     } }   아무것도 없는 상태에서 테스트 1을 수행했기 때문에,  영속성 컨텍스트에 해당 엔티티가 존재하는지 확인하는 isNew 의 결과에 따라서 분기가 갈립니다.  간단하게 isNew메소드의 구현을 보면 아래와 같습니다  public boolean isNew(T entity) {     ID id = getId(entity);     Class&lt;ID&gt; idType = getIdType();          if (!idType.isPrimitive()) {         return id == null;     }          if (id instanceof Number) {         return ((Number) id).longValue() == 0L;     } }   id의 타입이 원시타입이 아니라면 null일 때 true 입니다. 따라서 isNew는 true를 반환합니다  (Long은 wrapper 클래스이기때문에 원시타입이 아닙니다.)  이후 entityManager.persist 메소드 호출을 통해서 해당 엔티티는 영속성 컨텍스트에 등록됩니다. 인자로 넘긴 값을 그대로 반환하기 때문에 당연히 첫 assert는 성공합니다  영속성 컨텍스트와 롤백  첫번째 테스트가 종료되었습니다. 첫번째 테스트가 롤백되면, 데이터베이스에 저장되어있는 JOHN 엔티티는 사라질 것입니다. 마찬가지로, 영속성 컨텍스트 또한 초기화되면서 내부의 엔티티들은 detached 상태로 전환됩니다    transaction rollback causes all pre-existing managed instances and removed instances [31] to become detached [JSR-000317 Persistence Specification for Eval 2.0 Eval]   간단하게 em.contains(JOHN) 과 personRepository.find(JOHN)을 통해서 확인할 수 있고, 예상대로 둘다 false를 반환합니다.  하지만 id는 어떨까요?  Test2의 첫번째 줄에 JOHN.getId()를 하면 null 이 아닌 1이 출력되는것을 확인할 수 있습니다. 트랜잭션이 롤백되더라도 in-memory로 올라가있는 static 객체인 JOHN에 추가된 id는 회수되지 않는것입니다. 그리고 이게 두번째 테스트가 실패하는 원인입니다.  다시 save로 돌아가봅시다. 마찬가지로 isNew 까지 들어가는데, 이번에는 id 가 null이 아니기 때문에 em.merge()를 호출합니다. em.merge는 반환할 때 새로운 영속상태의 엔티티를 생성해서 반환합니다.  (주의:전달된 인자가 영속상태로 관리되는것이 아니라, 영속상태로 관리되는 새로운 객체를 반환) (em.contains(JOHN)을 해본다면 false가 출력됩니다)  즉, JOHN과는 전혀 다른, 영속상태로 관리되는 객체를 의미하는것입니다. 따라서 assert문은 실패하게 됩니다.  테스트간 엔티티를 공유하는것이 문제가 될 수 있는 시나리오였습니다. 이상입니다.  부록 - 왜 id는 트랜잭션이 롤백되더라도 회수되지 않는가? id는 왜 롤백되더라도 원래 상태로 복구되지 않습니다. 즉 id에 대한 값 부여는 트랜잭션과 별도로 일어나는 작업입니다. 왜 그럴까요? 만약 진행중인 트랜잭션이 끝나지 않고 5분동안 락을 소유하게 된다면 해당 테이블에 값을 레코드를 추가하고 싶은 다른 트랜잭션들의 작업이 모두 막히기 때문입니다.    from StackOverflow, Vlad Mihalcea">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2024-02-27T12:00:00+09:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/jpa/persistance2/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Claycat",
+      "url": "http://localhost:4000/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Claycat Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+
+
+<link
+  rel="apple-touch-icon"
+  sizes="180x180"
+  href="/assets/images/favicons/apple-touch-icon.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="32x32"
+  href="/assets/images/favicons/favicon-32x32.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="16x16"
+  href="/assets/images/favicons/favicon-16x16.png"
+/>
+
+<link rel="shortcut icon" href="/assets/images/favicons/favicon.ico" />
+<meta name="apple-mobile-web-app-title" content="Claycat" />
+<meta name="application-name" content="Claycat" />
+<meta name="msapplication-TileColor" content="#da532c" />
+<meta
+  name="msapplication-config"
+  content="/assets/images/favicons/browserconfig.xml"
+/>
+<meta name="theme-color" content="#ffffff" />
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Claycat
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">토글 메뉴</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+         
+
+<div id="main" role="main">
+  
+
+
+  <article
+    class="page h-entry"
+    itemscope
+    itemtype="https://schema.org/CreativeWork"
+  >
+    <meta
+      itemprop="headline"
+      content="영속성 까보기 (feat. 10분 테코톡)"
+    /> <meta
+      itemprop="description"
+      content="JPA와 영속성JPA 영속성 관련 실험 중 이상한 케이스를 발견했습니다.우아한형제들 테코톡의 문제상황 1에서도 비슷한 예제가 있습니다.영상에서는 정확히 이유를 설명하지는 않고 영속성 설명으로 넘어가버려서정확한 이유를 정리해보려고 합니다.@Getter@Entity@AllArgsConstructor@NoArgsConstructor(access = AccessLevel.PROTECTED)public class Person {    @Id    @GeneratedValue(strategy = GenerationType.IDENTITY)    private Long id;    private String name;    public Person(String name) {        this.name = name;    }}@DataJpaTest@TestMethodOrder(MethodOrderer.OrderAnnotation.class)class PersonRepositoryTest {    @Autowired    private PersonRepository personRepository;    private static final Person JOHN = new Person(&quot;John&quot;);    @Test // Test 1    @Order(1)    void saveAndCompare() {        Person person = personRepository.save(JOHN);        assertThat(person).isEqualTo(JOHN);    }    @Test // Test 2    @Order(2)    void find() {        Person person = personRepository.save(JOHN);        assertThat(person).isEqualTo(JOHN);    }}결과위에 작성되어있는 Person 클래스의 테스트 코드인Test1 과 Test2를 각자 돌렸을 때는 성공하지만,  동시에 돌리게 되면 실패합니다.일반적으로 @DataJpaTest에는 @Transactional이 달려있기 때문에,하위 테스트들 모두에 @Transactional이 적용됩니다@Transactional이 걸린 테스트들은 테스트 마지막에 rollback이 된다는 사실도 알고 있죠.트랜잭션이 롤백되면 영속성 컨텍스트도 초기화되어 직관적으로는두개 다 성공하거나 두개 다 실패해야 할 꺼라고 생각되는데,왜 둘 중 하나만 성공하는걸까요?영속성 컨텍스트가 동기화가 되지 않은걸까요?하지만 em.flush() 와 em.clear()을 Test1 마지막에 추가하더라도 결과가 동일한것을 볼 수 있을 것입니다.왜 실패하는지 그 이유에 대해 단계별로 쪼개서 알아보도록 합시다.Test 1 에서는 어떤일이 일어나는가Person person = personRepository.save(JOHN); 단 한줄입니다save 메소드의 내부 코드를 간단하게 살펴보면 다음과 같습니다 (분량상 몇줄 생략)@Transactionalpublic &lt;S extends T&gt; S save(S entity) {    if (entityInformation.isNew(entity)) {        entityManager.persist(entity);        return entity;    } else {        return entityManager.merge(entity);    }}아무것도 없는 상태에서 테스트 1을 수행했기 때문에, 영속성 컨텍스트에 해당 엔티티가 존재하는지 확인하는 isNew 의 결과에 따라서 분기가 갈립니다.간단하게 isNew메소드의 구현을 보면 아래와 같습니다public boolean isNew(T entity) {    ID id = getId(entity);    Class&lt;ID&gt; idType = getIdType();        if (!idType.isPrimitive()) {        return id == null;    }        if (id instanceof Number) {        return ((Number) id).longValue() == 0L;    }}id의 타입이 원시타입이 아니라면 null일 때 true 입니다.따라서 isNew는 true를 반환합니다 (Long은 wrapper 클래스이기때문에 원시타입이 아닙니다.)이후 entityManager.persist 메소드 호출을 통해서 해당 엔티티는 영속성 컨텍스트에 등록됩니다.인자로 넘긴 값을 그대로 반환하기 때문에 당연히 첫 assert는 성공합니다영속성 컨텍스트와 롤백첫번째 테스트가 종료되었습니다.첫번째 테스트가 롤백되면, 데이터베이스에 저장되어있는 JOHN 엔티티는 사라질 것입니다.마찬가지로, 영속성 컨텍스트 또한 초기화되면서 내부의 엔티티들은 detached 상태로 전환됩니다  transaction rollback causes all pre-existing managed instances and removed instances [31] to become detached[JSR-000317 Persistence Specification for Eval 2.0 Eval]간단하게 em.contains(JOHN) 과 personRepository.find(JOHN)을 통해서 확인할 수 있고,예상대로 둘다 false를 반환합니다.하지만 id는 어떨까요? Test2의 첫번째 줄에 JOHN.getId()를 하면 null 이 아닌 1이 출력되는것을 확인할 수 있습니다.트랜잭션이 롤백되더라도 in-memory로 올라가있는 static 객체인 JOHN에 추가된 id는 회수되지 않는것입니다.그리고 이게 두번째 테스트가 실패하는 원인입니다.다시 save로 돌아가봅시다.마찬가지로 isNew 까지 들어가는데, 이번에는 id 가 null이 아니기 때문에 em.merge()를 호출합니다.em.merge는 반환할 때 새로운 영속상태의 엔티티를 생성해서 반환합니다.(주의:전달된 인자가 영속상태로 관리되는것이 아니라, 영속상태로 관리되는 새로운 객체를 반환)(em.contains(JOHN)을 해본다면 false가 출력됩니다)즉, JOHN과는 전혀 다른, 영속상태로 관리되는 객체를 의미하는것입니다.따라서 assert문은 실패하게 됩니다.테스트간 엔티티를 공유하는것이 문제가 될 수 있는 시나리오였습니다.이상입니다.부록 - 왜 id는 트랜잭션이 롤백되더라도 회수되지 않는가?id는 왜 롤백되더라도 원래 상태로 복구되지 않습니다.즉 id에 대한 값 부여는 트랜잭션과 별도로 일어나는 작업입니다.왜 그럴까요?만약 진행중인 트랜잭션이 끝나지 않고 5분동안 락을 소유하게 된다면해당 테이블에 값을 레코드를 추가하고 싶은 다른 트랜잭션들의 작업이 모두 막히기 때문입니다.  from StackOverflow, Vlad Mihalcea"
+    /> <meta
+      itemprop="datePublished"
+      content="2024-02-27T12:00:00+09:00"
+    /> 
+
+    <div class="page__inner-wrap">
+      
+      <header>
+        
+        <h1 id="page-title" class="page__title" itemprop="headline">
+          <p>영속성 까보기 (feat. 10분 테코톡)</p>
+
+        </h1>
+         
+      </header>
+      
+
+      <section class="page__content e-content" itemprop="text">
+         <h2 id="jpa와-영속성"><strong>JPA와 영속성</strong></h2>
+
+<p>JPA 영속성 관련 실험 중 이상한 케이스를 발견했습니다.<br />
+<a href="https://www.youtube.com/watch?v=kJexMyaeHDs&amp;t=92s">우아한형제들 테코톡</a>의 문제상황 1에서도 비슷한 예제가 있습니다.<br />
+영상에서는 정확히 이유를 설명하지는 않고 영속성 설명으로 넘어가버려서
+정확한 이유를 정리해보려고 합니다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Getter</span>
+<span class="nd">@Entity</span>
+<span class="nd">@AllArgsConstructor</span>
+<span class="nd">@NoArgsConstructor</span><span class="o">(</span><span class="n">access</span> <span class="o">=</span> <span class="nc">AccessLevel</span><span class="o">.</span><span class="na">PROTECTED</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Person</span> <span class="o">{</span>
+    <span class="nd">@Id</span>
+    <span class="nd">@GeneratedValue</span><span class="o">(</span><span class="n">strategy</span> <span class="o">=</span> <span class="nc">GenerationType</span><span class="o">.</span><span class="na">IDENTITY</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="nc">Long</span> <span class="n">id</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="nc">String</span> <span class="n">name</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">Person</span><span class="o">(</span><span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@DataJpaTest</span>
+<span class="nd">@TestMethodOrder</span><span class="o">(</span><span class="nc">MethodOrderer</span><span class="o">.</span><span class="na">OrderAnnotation</span><span class="o">.</span><span class="na">class</span><span class="o">)</span>
+<span class="kd">class</span> <span class="nc">PersonRepositoryTest</span> <span class="o">{</span>
+    <span class="nd">@Autowired</span>
+    <span class="kd">private</span> <span class="nc">PersonRepository</span> <span class="n">personRepository</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">Person</span> <span class="no">JOHN</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Person</span><span class="o">(</span><span class="s">"John"</span><span class="o">);</span>
+
+
+    <span class="nd">@Test</span> <span class="c1">// Test 1</span>
+    <span class="nd">@Order</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span>
+    <span class="kt">void</span> <span class="nf">saveAndCompare</span><span class="o">()</span> <span class="o">{</span>
+        <span class="nc">Person</span> <span class="n">person</span> <span class="o">=</span> <span class="n">personRepository</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="no">JOHN</span><span class="o">);</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">person</span><span class="o">).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="no">JOHN</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Test</span> <span class="c1">// Test 2</span>
+    <span class="nd">@Order</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span>
+    <span class="kt">void</span> <span class="nf">find</span><span class="o">()</span> <span class="o">{</span>
+        <span class="nc">Person</span> <span class="n">person</span> <span class="o">=</span> <span class="n">personRepository</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="no">JOHN</span><span class="o">);</span>
+        <span class="n">assertThat</span><span class="o">(</span><span class="n">person</span><span class="o">).</span><span class="na">isEqualTo</span><span class="o">(</span><span class="no">JOHN</span><span class="o">);</span>
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="결과"><strong>결과</strong></h3>
+<p>위에 작성되어있는 <code class="language-plaintext highlighter-rouge">Person</code> 클래스의 테스트 코드인<br />
+Test1 과 Test2를 <strong>각자</strong> 돌렸을 때는 <strong>성공</strong>하지만,  <br />
+<strong>동시</strong>에 돌리게 되면 <strong>실패</strong>합니다.</p>
+
+<p>일반적으로 <code class="language-plaintext highlighter-rouge">@DataJpaTest</code>에는 <code class="language-plaintext highlighter-rouge">@Transactional</code>이 달려있기 때문에,<br />
+하위 테스트들 모두에 <code class="language-plaintext highlighter-rouge">@Transactional</code>이 적용됩니다<br />
+@Transactional이 걸린 테스트들은 테스트 마지막에 rollback이 된다는 사실도 알고 있죠.<br />
+트랜잭션이 롤백되면 영속성 컨텍스트도 초기화되어 직관적으로는<br />
+두개 다 성공하거나 두개 다 실패해야 할 꺼라고 생각되는데,<br />
+<strong>왜 둘 중 하나만 성공하는걸까요?</strong></p>
+
+<p><em>영속성 컨텍스트가 동기화가 되지 않은걸까요?</em><br />
+하지만 <code class="language-plaintext highlighter-rouge">em.flush()</code> 와 <code class="language-plaintext highlighter-rouge">em.clear()</code>을 Test1 마지막에 추가하더라도 <br />
+결과가 동일한것을 볼 수 있을 것입니다.</p>
+
+<p>왜 실패하는지 그 이유에 대해 단계별로 쪼개서 알아보도록 합시다.</p>
+
+<h2 id="test-1-에서는-어떤일이-일어나는가"><strong>Test 1 에서는 어떤일이 일어나는가</strong></h2>
+<p><code class="language-plaintext highlighter-rouge">Person person = personRepository.save(JOHN);</code> <br />
+단 한줄입니다</p>
+
+<p>save 메소드의 내부 코드를 간단하게 살펴보면 다음과 같습니다 (분량상 몇줄 생략)</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Transactional</span>
+<span class="kd">public</span> <span class="o">&lt;</span><span class="no">S</span> <span class="kd">extends</span> <span class="no">T</span><span class="o">&gt;</span> <span class="no">S</span> <span class="nf">save</span><span class="o">(</span><span class="no">S</span> <span class="n">entity</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">entityInformation</span><span class="o">.</span><span class="na">isNew</span><span class="o">(</span><span class="n">entity</span><span class="o">))</span> <span class="o">{</span>
+        <span class="n">entityManager</span><span class="o">.</span><span class="na">persist</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">entity</span><span class="o">;</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">entityManager</span><span class="o">.</span><span class="na">merge</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>아무것도 없는 상태에서 테스트 1을 수행했기 때문에, <br />
+영속성 컨텍스트에 해당 엔티티가 존재하는지 확인하는 isNew 의 결과에 따라서 분기가 갈립니다.</p>
+
+<p>간단하게 isNew메소드의 구현을 보면 아래와 같습니다</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isNew</span><span class="o">(</span><span class="no">T</span> <span class="n">entity</span><span class="o">)</span> <span class="o">{</span>
+    <span class="no">ID</span> <span class="n">id</span> <span class="o">=</span> <span class="n">getId</span><span class="o">(</span><span class="n">entity</span><span class="o">);</span>
+    <span class="nc">Class</span><span class="o">&lt;</span><span class="no">ID</span><span class="o">&gt;</span> <span class="n">idType</span> <span class="o">=</span> <span class="n">getIdType</span><span class="o">();</span>
+    
+    <span class="k">if</span> <span class="o">(!</span><span class="n">idType</span><span class="o">.</span><span class="na">isPrimitive</span><span class="o">())</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">id</span> <span class="o">==</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="o">}</span>
+    
+    <span class="k">if</span> <span class="o">(</span><span class="n">id</span> <span class="k">instanceof</span> <span class="nc">Number</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="o">((</span><span class="nc">Number</span><span class="o">)</span> <span class="n">id</span><span class="o">).</span><span class="na">longValue</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0L</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>id의 타입이 원시타입이 아니라면 null일 때 true 입니다.<br />
+따라서 isNew는 true를 반환합니다 <br />
+(<strong>Long은 wrapper 클래스이기때문에 원시타입이 아닙니다.</strong>)</p>
+
+<p>이후 entityManager.persist 메소드 호출을 통해서 해당 엔티티는 영속성 컨텍스트에 등록됩니다.
+인자로 넘긴 값을 그대로 반환하기 때문에 당연히 첫 <code class="language-plaintext highlighter-rouge">assert</code>는 성공합니다</p>
+
+<h2 id="영속성-컨텍스트와-롤백"><strong>영속성 컨텍스트와 롤백</strong></h2>
+
+<p>첫번째 테스트가 종료되었습니다.
+첫번째 테스트가 롤백되면, 데이터베이스에 저장되어있는 <code class="language-plaintext highlighter-rouge">JOHN</code> 엔티티는 사라질 것입니다.
+마찬가지로, 영속성 컨텍스트 또한 초기화되면서 내부의 엔티티들은 <code class="language-plaintext highlighter-rouge">detached</code> 상태로 전환됩니다</p>
+<blockquote>
+  <p>transaction rollback causes all pre-existing managed instances and removed instances [31] to become <strong>detached</strong><br />
+[JSR-000317 Persistence Specification for Eval 2.0 Eval]</p>
+</blockquote>
+
+<p>간단하게 <code class="language-plaintext highlighter-rouge">em.contains(JOHN)</code> 과 <code class="language-plaintext highlighter-rouge">personRepository.find(JOHN)</code>을 통해서 확인할 수 있고,<br />
+예상대로 둘다 <code class="language-plaintext highlighter-rouge">false</code>를 반환합니다.</p>
+
+<p>하지만 id는 어떨까요? 
+Test2의 첫번째 줄에 JOHN.getId()를 하면 null 이 아닌 1이 출력되는것을 확인할 수 있습니다.<br />
+<strong>트랜잭션이 롤백되더라도 in-memory로 올라가있는 static 객체인 JOHN에 추가된 id는 회수되지 않는것입니다.</strong><br />
+<strong>그리고 이게 두번째 테스트가 실패하는 원인입니다.</strong></p>
+
+<p>다시 save로 돌아가봅시다.
+마찬가지로 isNew 까지 들어가는데, 이번에는 id 가 null이 아니기 때문에 em.merge()를 호출합니다.<br />
+em.merge는 반환할 때 새로운 영속상태의 엔티티를 생성해서 반환합니다.</p>
+
+<p><em>(주의:전달된 인자가 영속상태로 관리되는것이 아니라, 영속상태로 관리되는 새로운 객체를 반환)</em>
+<em>(em.contains(JOHN)을 해본다면 false가 출력됩니다)</em></p>
+
+<p>즉, JOHN과는 전혀 다른, 영속상태로 관리되는 객체를 의미하는것입니다.<br />
+따라서 assert문은 실패하게 됩니다.</p>
+
+<p>테스트간 엔티티를 공유하는것이 문제가 될 수 있는 시나리오였습니다.<br />
+이상입니다.</p>
+
+<h3 id="부록---왜-id는-트랜잭션이-롤백되더라도-회수되지-않는가"><strong>부록 - 왜 id는 트랜잭션이 롤백되더라도 회수되지 않는가?</strong></h3>
+<p>id는 왜 롤백되더라도 원래 상태로 복구되지 않습니다.<br />
+즉 id에 대한 값 부여는 트랜잭션과 별도로 일어나는 작업입니다.<br />
+왜 그럴까요?<br />
+만약 진행중인 트랜잭션이 끝나지 않고 5분동안 락을 소유하게 된다면
+해당 테이블에 값을 레코드를 추가하고 싶은 다른 트랜잭션들의 작업이 모두 막히기 때문입니다.</p>
+<blockquote>
+  <p>from <a href="https://stackoverflow.com/a/67401366">StackOverflow</a>, Vlad Mihalcea</p>
+</blockquote>
+ 
+      </section>
+
+      <footer class="page__meta">
+         
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> 태그: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/#jpa" class="page__taxonomy-item p-category" rel="tag">JPA</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> 카테고리: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#jpa" class="page__taxonomy-item p-category" rel="tag">JPA</a>
+    
+    </span>
+  </p>
+
+ 
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> 업데이트:</strong> <time class="dt-published" datetime="2024-02-27T12:00:00+09:00">February 27, 2024</time></p>
+
+      </footer>
+      
+  <nav class="pagination">
+    
+      <a href="/interview/ms_java1/" class="pagination--pager" title="CS 면접대비 - 프로그래밍 언어(자바)
+">이전</a>
+    
+    
+      <a href="/%EA%B0%9D%EC%B2%B4%EC%A7%80%ED%96%A5/isp1/" class="pagination--pager" title="인터페이스 분리 원칙에 대해
+">다음</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+   
+  <div class="page__related">
+    <h2 class="page__related-title">
+      참고
+    </h2>
+    <div class="grid__wrapper">
+       
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/tiketeer/concurrency/" rel="permalink">티케팅 시스템 구현에서의 동시성 문제 : 원인
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> April 02 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">개요
+</p>
+  </article>
+</div>
+  
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/tiketeer/architecture/" rel="permalink">스프링 코드 아키텍처
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> March 25 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">작성자 : Claycat
+
+개요
+
+여러분들의 백엔드 프로젝트 아키텍처는 어떤가요?
+
+이번에 지인들과 함께 Java/스프링 기반의 사이드 프로젝트를 진행하고 있습니다.
+프로젝트를 진행하던 중 초기 아키텍처 및 디렉토리 구조에 대해서 많은 고민이 있었는데요.
+결정 과정에 대해서 소개해...</p>
+  </article>
+</div>
+  
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/%EA%B0%9D%EC%B2%B4%EC%A7%80%ED%96%A5/isp1/" rel="permalink">인터페이스 분리 원칙에 대해
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> February 27 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">다 알고 있는 사실
+
+  어떤 코드도 자신이 사용하지 않는 메소드에 의존하면 안된다
+자신이 사용하는 메서드에만 의존해야 한다
+
+
+매번 나오는 설명입니다.
+보통 이야기를 들어도 잘 이해가 안가기 때문에 보통 예제를 봅니다.
+
+interface Person {
+	public void ...</p>
+  </article>
+</div>
+  
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/interview/ms_java1/" rel="permalink">CS 면접대비 - 프로그래밍 언어(자바)
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> February 24 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">❓Call by Value 와 Call by reference의 차이가 무엇인가요?
+</p>
+  </article>
+</div>
+ 
+    </div>
+  </div>
+   
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="검색어를 입력하세요..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>팔로우:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://github.com/claycat" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> 피드</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2024 Claycat. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+    <script>
+  'use strict';
+
+  (function () {
+    var commentContainer = document.querySelector('#giscus-comments');
+
+    if (!commentContainer) {
+      return;
+    }
+
+    var script = document.createElement('script');
+    script.setAttribute('src', 'https://giscus.app/client.js');
+    script.setAttribute('data-repo', 'claycat');
+    script.setAttribute('data-repo-id', 'R_kgDOLLYTXw');
+    script.setAttribute('data-category', '');
+    script.setAttribute('data-category-id', 'DIC_kwDOLLYTX84Ccyz5');
+    script.setAttribute('data-mapping', 'pathname');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-theme', 'light');
+    script.setAttribute('crossorigin', 'anonymous');
+
+    commentContainer.appendChild(script);
+  })();
+</script>
+  
+
+
+
+
+
+  </body>
+</html>

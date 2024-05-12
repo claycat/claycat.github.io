@@ -1,0 +1,699 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="ko" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Posts by Year : Claycat</title>
+<meta name="description" content="Backend developer dreamtree.">
+
+
+
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="Claycat">
+<meta property="og:title" content="Posts by Year">
+<meta property="og:url" content="http://localhost:4000/posts/">
+
+
+  <meta property="og:description" content="Backend developer dreamtree.">
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="http://localhost:4000/posts/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Claycat",
+      "url": "http://localhost:4000/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Claycat Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+
+
+<link
+  rel="apple-touch-icon"
+  sizes="180x180"
+  href="/assets/images/favicons/apple-touch-icon.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="32x32"
+  href="/assets/images/favicons/favicon-32x32.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="16x16"
+  href="/assets/images/favicons/favicon-16x16.png"
+/>
+
+<link rel="shortcut icon" href="/assets/images/favicons/favicon.ico" />
+<meta name="apple-mobile-web-app-title" content="Claycat" />
+<meta name="application-name" content="Claycat" />
+<meta name="msapplication-TileColor" content="#da532c" />
+<meta
+  name="msapplication-config"
+  content="/assets/images/favicons/browserconfig.xml"
+/>
+<meta name="theme-color" content="#ffffff" />
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--posts">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+        <a class="site-title" href="/">
+          Claycat
+          
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/posts/">Posts</a>
+            </li><li class="masthead__menu-item">
+              <a href="/categories/">Categories</a>
+            </li><li class="masthead__menu-item">
+              <a href="/tags/">Tags</a>
+            </li><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">토글 메뉴</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+
+
+  <div class="archive">
+    
+      <h1 id="page-title" class="page__title">Posts by Year</h1>
+    
+    
+
+
+<ul class="taxonomy__index">
+  
+  
+    <li>
+      <a href="#2024">
+        <strong>2024</strong> <span class="taxonomy__count">12</span>
+      </a>
+    </li>
+  
+</ul>
+
+
+
+
+  <section id="2024" class="taxonomy__section">
+    <h2 class="archive__subtitle">2024</h2>
+    <div class="entries-list">
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/tiketeer/concurrency/" rel="permalink">티케팅 시스템 구현에서의 동시성 문제 : 원인
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> April 02 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">개요
+</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/tiketeer/architecture/" rel="permalink">스프링 코드 아키텍처
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> March 25 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">작성자 : Claycat
+
+개요
+
+여러분들의 백엔드 프로젝트 아키텍처는 어떤가요?
+
+이번에 지인들과 함께 Java/스프링 기반의 사이드 프로젝트를 진행하고 있습니다.
+프로젝트를 진행하던 중 초기 아키텍처 및 디렉토리 구조에 대해서 많은 고민이 있었는데요.
+결정 과정에 대해서 소개해...</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/%EA%B0%9D%EC%B2%B4%EC%A7%80%ED%96%A5/isp1/" rel="permalink">인터페이스 분리 원칙에 대해
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> February 27 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">다 알고 있는 사실
+
+  어떤 코드도 자신이 사용하지 않는 메소드에 의존하면 안된다
+자신이 사용하는 메서드에만 의존해야 한다
+
+
+매번 나오는 설명입니다.
+보통 이야기를 들어도 잘 이해가 안가기 때문에 보통 예제를 봅니다.
+
+interface Person {
+	public void ...</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/jpa/persistance2/" rel="permalink">영속성 까보기 (feat. 10분 테코톡)
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> February 27 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">JPA와 영속성
+
+JPA 영속성 관련 실험 중 이상한 케이스를 발견했습니다.
+우아한형제들 테코톡의 문제상황 1에서도 비슷한 예제가 있습니다.
+영상에서는 정확히 이유를 설명하지는 않고 영속성 설명으로 넘어가버려서
+정확한 이유를 정리해보려고 합니다.
+
+@Getter
+@Entity
+@A...</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/interview/ms_java1/" rel="permalink">CS 면접대비 - 프로그래밍 언어(자바)
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> February 24 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">❓Call by Value 와 Call by reference의 차이가 무엇인가요?
+</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/interview/ms_container/" rel="permalink">CS 면접대비 - 컨테이너
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> February 24 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">도커가 왜 필요할까요?
+    
+      옛날 이야기를 잠깐 하면
+        
+          옛날에는 서버를 관리하는게 쉽지 않았습니다
+          새롭게 설치해야하는 프로그램은 많고
+          운영체제는 업데이트되고
+          그와중 프로그램끼리 호환...</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/web_servers/" rel="permalink">웹 서버와 포트, 소켓, 그리고 스레드
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> January 24 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">웹 서버와 포트, 소켓, 그리고 스레드
+
+
+
+지금까지 웹서버를 설정할 때 아무 생각 없이 포트 설정을 해 왔다.
+Nestjs 라면 아래와 같이,
+
+// main.ts
+async function bootstrap() {
+  const app = await NestFactory.cre...</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/jpa/persistance/" rel="permalink">영속성 핥아보기
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> January 24 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">영속성이란
+
+  영원히 계속되는 성질이나 능력
+  영속화 : 어플리케이션의 상태와 상관없이 물리적인 저장소에 데이터를 저장하는 행위
+    
+      데이터를 어떤 공간에 어떤 형태로 저장할 것인가?
+      RDMBS에 데이터를 저장하는 방법은 SQL이라고 볼 수 있다
+   ...</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/interview/ms_os1/" rel="permalink">CS 면접대비 - 운영체제
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> January 24 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">프로세스와 스레드의 차이는?
+
+    
+      개념의 추상화에 대응하는 데이터와 코드를 보유할 수 있는 “객체” 와 그 객체간의 상호작용을 통해 프로그램을 작성하는 방법론
+    
+
+  
+
+프로그램이란?
+
+    
+      프로그램이란 디스크에 저장되어있는 실행가능한 파일로,...</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/interview/ms_oop1/" rel="permalink">CS 면접대비 - 객체지향 프로그래밍
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> January 24 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">객체 지향 프로그래밍이 무엇인가요?
+
+    
+      개념의 추상화에 대응하는 데이터와 코드를 보유할 수 있는 “객체” 와 그 객체간의 상호작용을 통해 프로그램을 작성하는 방법론
+    
+
+  
+
+객체지향 프로그래밍의 장점이 무엇인가요?
+
+    
+      
+        코...</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/interview/ms_network2/" rel="permalink">CS 면접대비 - 네트워크
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> January 24 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">OSI 7계층
+    
+      “OSI 7계층을 설명해주세요”
+        
+          Physical Layer - 케이블, 허브 : 전기신호 전송
+          Data Link Layer - 브릿지, 스위치 : MAC주소 부여!
+            
+    ...</p>
+  </article>
+</div>
+
+      
+        
+
+
+
+<div class="list__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/interview/ms_database1/" rel="permalink">CS 면접대비 - 데이터베이스
+</a>
+      
+    </h2>
+    <!--
+            아키이브 싱글 페이지(ex. 카테고리)에 각 포스트 제목 밑에 Updated 시간 표기
+            기존에는 read_time이 표기. read_time -> date 변경
+    
+    -->
+    
+    <p class="page__meta"><i class="far fa-fw fa-calendar-alt" aria-hidden="true"></i> January 24 2024
+    </p>
+    
+    
+    <p class="archive__item-excerpt" itemprop="description">데이터베이스 키에 대해서 설명해주세요
+    
+      Candidate Key
+        
+          Unique 식별
+          최소 속성
+        
+      
+      Foreign Key
+        
+          다른 테이블의 Prima...</p>
+  </article>
+</div>
+
+      
+    </div>
+    <a href="#page-title" class="back-to-top">맨 위로 이동 &uarr;</a>
+  </section>
+
+
+  </div>
+</div>
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';" role="search">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="검색어를 입력하세요..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>팔로우:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://github.com/claycat" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> 피드</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2024 Claycat. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+
+
+
+  </body>
+</html>
