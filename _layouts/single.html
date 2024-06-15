@@ -91,8 +91,7 @@ breadcrumbs.html %} {% endunless %} {% endif %}
       {% include post_pagination.html %}
     </div>
 
-    {% if jekyll.environment == 'production' and site.comments.provider and
-    page.comments %} {% include comments.html %} {% endif %}
+    {% include comments.html %}
   </article>
 
   {% comment %}<!-- only show related on a post page when `related: true` -->{%
