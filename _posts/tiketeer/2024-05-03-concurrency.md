@@ -11,7 +11,6 @@ tags: [java, spring, jpa, mysql, tiketeer]
 ### 동시성
 
 > 여러개의 스레드 또는 프로세스가 동일한 자원에 접근하거나 수정할 때 발생하는 문제
-> 
 
 이번 아티클에서는 티케팅 시스템에서 여러 사용자가 한정된 수량에 대해 동시에 구매를 요청했을 때
 발생할 수 있는 **동시성 문제**에 대해서 다루도록 하겠습니다.
@@ -40,7 +39,7 @@ tags: [java, spring, jpa, mysql, tiketeer]
 
 40명의 구매자가 총 20개 티켓에 대해서 동시에 구매 요청을 전송합니다.
 
-기대되는 올바른 결과는 다음과 같습니다 : 
+기대되는 올바른 결과는 다음과 같습니다 :
 
 1. 20개의 티켓은 모두 소진, 서로 다른 구매자에게 배정
 2. 20명의 구매자는 성공적으로 티켓을 구매
@@ -66,7 +65,7 @@ tags: [java, spring, jpa, mysql, tiketeer]
 
 해당 문제의 원인은 트랜잭션의 공유자원 접근으로 인해 일어납니다.
 
-![](../../assets/images/2024-06-12-16-03-07.png)
+<img src="../../assets/images/2024-06-12-16-03-07.png" alt="Description" style="display:block; width:700px; margin-left:auto; margin-right:auto;">
 
 실제 요약된 SQL과 함께 살펴보면 다음과 같습니다
 

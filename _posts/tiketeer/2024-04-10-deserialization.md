@@ -1,6 +1,6 @@
 ---
 title: "테스트 코드 JSON 문자열  Deserialization"
-date: 2024-05-12 12:00:00 +/-TTTT
+date: 2024-04-10 12:00:00 +/-TTTT
 categories: [Tiketeer]
 comments: true
 tags: [java, spring, tiketeer]
@@ -37,11 +37,11 @@ RestController를 MockMvc를 사용하여 테스트를 진행할 때 JSON 결과
 			.andExpect(jsonPath("$.data[0].runningMinutes").value(600));
 ```
 
-jsonPath를 사용한 수동 값 검증은 json 구조가 복잡하지 않을 경우에는 편리하지만, 
+jsonPath를 사용한 수동 값 검증은 json 구조가 복잡하지 않을 경우에는 편리하지만,
 
-객체의 속성들이 많아지고 배열 등이 섞이게 되면 jsonPath가 문자열을 인자로 받는 특성상, IDE의 도움을 
+객체의 속성들이 많아지고 배열 등이 섞이게 되면 jsonPath가 문자열을 인자로 받는 특성상, IDE의 도움을
 
-받을 수 없어 놓치거나 오타가 들어가는 등 불편함을 느끼게 되었습니다. 
+받을 수 없어 놓치거나 오타가 들어가는 등 불편함을 느끼게 되었습니다.
 
 그러던 중 TypeScript의 경우, JSON.parse 메소드를 사용하면 쉽게 json 문자열을 객체로 변환하는것이 가능했는데,
 
@@ -81,7 +81,7 @@ public class ApiResponse<T> {
 }
 ```
 
-저희는 해당 래퍼 클래스를 활용하여 
+저희는 해당 래퍼 클래스를 활용하여
 
 1. 단일 객체 DTO
 2. 배열 DTO (ex: `TicketingResponse[]` 와 같이 배열을 반환해야 하는경우)
@@ -89,6 +89,7 @@ public class ApiResponse<T> {
 를 생성해주고 있습니다.
 
 각 종류에 대해서 어떻게 역직렬화를 하고 있는지 설명드리도록 하겠습니다.
+
 ### 단일 객체 DTO
 
 비슷한 고민을 한 사람들이 많았는지, 대표적인 직렬화/역직렬화 라이브러리인 Jackson에서는 이미
@@ -109,7 +110,7 @@ private JavaType getApiResponseType(Class<?> clazz) {
 	}
 ```
 
-두 메소드를 활용하면 아래와 같이 역직렬화 메소드를 만들 수 있습니다. 
+두 메소드를 활용하면 아래와 같이 역직렬화 메소드를 만들 수 있습니다.
 
 ```java
 
@@ -121,7 +122,7 @@ private JavaType getApiResponseType(Class<?> clazz) {
 
 ### 리스트 형태 DTO
 
-단일 객체가 아닌 리스트 형태의 반환타입은 아래와 같이 메소드를 작성할 수 있습니다. 
+단일 객체가 아닌 리스트 형태의 반환타입은 아래와 같이 메소드를 작성할 수 있습니다.
 
 `List<TargetType>` 의 형태를 반환할 때, 최종 목표는 `List<TargetType>` 의 JavaType 객체를 구하는 것입니다.
 
@@ -148,7 +149,7 @@ private JavaType getListApiResponseType(Class<?> clazz) {
 }
 ```
 
-이제 List 클래스에 대한 JavaType을 구하는 일만 남았습니다. 
+이제 List 클래스에 대한 JavaType을 구하는 일만 남았습니다.
 
 ```java
 
@@ -157,21 +158,21 @@ private JavaType getListApiResponseType(Class<?> clazz) {
 }
 ```
 
-모두 합치면 다음 메소드를 작성할 수 있습니다. 
+모두 합치면 다음 메소드를 작성할 수 있습니다.
 
 ```java
-public <T> ApiResponse<List<T>> getDeserializedListApiResponse(String json, Class<T> responseType) 
+public <T> ApiResponse<List<T>> getDeserializedListApiResponse(String json, Class<T> responseType)
 	throws
 	JsonProcessingException {
 	return objectMapper.readValue(json, getListApiResponseType(responseType));
 }
 ```
 
-저희는 작성한 메소드들을 테스트코드에서 반복적으로 이루어지는 작업 (데이터베이스의 테이블 초기화 등) 을 담당하는 
+저희는 작성한 메소드들을 테스트코드에서 반복적으로 이루어지는 작업 (데이터베이스의 테이블 초기화 등) 을 담당하는
 
 TestHelper 클래스 내부에 배치시켰습니다.
 
-실제 사용 예시는 다음과 같습니다. 
+실제 사용 예시는 다음과 같습니다.
 
 ```java
 	//when - then
@@ -187,7 +188,7 @@ TestHelper 클래스 내부에 배치시켰습니다.
 
 	String jsonResult = result.getResponse().getContentAsString();
 
-	ApiResponse<List<GetMemberTicketingSalesResponseDto>> apiResponse = 
+	ApiResponse<List<GetMemberTicketingSalesResponseDto>> apiResponse =
 		testHelper.getDeserializedListApiResponse(
 		jsonResult, GetMemberTicketingSalesResponseDto.class);
 
@@ -208,7 +209,7 @@ TestHelper 클래스 내부에 배치시켰습니다.
 
 ### 이점
 
-해당 방식으로 JSON값을 객체로 역직렬화한다면 추가적인 이점 또한 존재합니다. 
+해당 방식으로 JSON값을 객체로 역직렬화한다면 추가적인 이점 또한 존재합니다.
 
 바로 DateTime등 시간 객체에서 제공하는 메소드들을 활용할 수 있다는 것인데요.
 
