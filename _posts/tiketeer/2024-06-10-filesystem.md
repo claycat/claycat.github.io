@@ -32,6 +32,9 @@ tags: [java, tiketeer, oop]
 
 모든 코드는 [🔗레포지토리](https://github.com/Tiketeer/Tiketeer-BE) 에서 확인할 수 있습니다. 
 
+  &nbsp;
+  &nbsp;
+
 # 본론
 
 ## 기존 파일 처리 방식
@@ -64,7 +67,7 @@ tags: [java, tiketeer, oop]
 
 결국 파일의 접근자만 제공한다면 이미지 접근 링크를 미리 제공하고, 저장 자체는 비동기로 수행해도 된다는 생각이 들었습니다.
 
-파일 서비스의 독립성을 위해서 서버를 분리한 아키텍처입니다
+파일 서비스의 독립성을 위해서 Non-Blocking Reactive 구조를 채택하여 서버를 분리한 분리한 아키텍처입니다
 
 <img src="../../assets/images/2024-09-04-00-56-23.png" alt="Description" style="display:block; width:1000px; margin-left:auto; margin-right:auto;">
 
@@ -131,7 +134,59 @@ LocalFileSystemUtil의 기능을 갖는 LocalFileStorage 라는 추상 클래스
 
 <img src="../../assets/images/2024-09-04-00-32-41.png" alt="Description" style="display:block; width:1000px; margin-left:auto; margin-right:auto;">
 
+
+  &nbsp;
+  &nbsp;
+
 # 결론
+
+## 개선
+
+먼저 개선된 성능을 소개드리도록 하겠습니다
+
+약 [9.6MB의 고화질 이미지](https://commons.wikimedia.org/wiki/File:%22_Stay_on_the_Job%22_Ralley_at_K-25_by_J.A._Jones_Construction_Co._1944_Oak_Ridge_(24798675620).jpg)를 사용하였고, 티켓팅 등록 요청의 응답시간을 비교하였습니다.
+
+### 기존 동기 방식
+
+<img src="../../assets/images/2024-09-04-02-15-58.png" alt="Description" style="display:block; width:600px; margin-left:auto; margin-right:auto;">
+
+**3.64초**가 소요되었습니다.
+
+### Webflux Reactor + 비동기 방식
+
+파일을 저장하는데 소요된 시간은 약 **742.83밀리초**로, 아래와 같습니다.
+
+<img src="../../assets/images/2024-09-04-02-18-23.png" alt="Description" style="display:block; width:600px; margin-left:auto; margin-right:auto;">
+
+티켓팅을 저장하는데 소요된 시간은 약 **96.85밀리초**로 아래와 같습니다.
+
+<img src="../../assets/images/2024-09-04-02-19-08.png" alt="Description" style="display:block; width:600px; margin-left:auto; margin-right:auto;">
+
+두 요청은 비동기적으로 작동하기 때문에 둘 중 더 긴 요청이 지배합니다.
+
+간단하게 계산해본다면 다음과 같습니다
+
+To calculate the percentage improvement in performance when optimizing a request, you can use the formula:
+
+$$
+\text{개선률} = \left(\frac{\text{Original Time} - \text{Optimized Time}}{\text{Original Time}}\right) \times 100
+$$
+
+
+$$
+\text{개선률} = \left(\frac{3.64 \text{ seconds} - 0.742 \text{ seconds}}{3.64 \text{ seconds}}\right) \times 100
+$$
+
+
+$$
+\text{개선률} = 79.615\%
+$$
+
+약 80%의 성능 향상을 할 수 있었던 것을 확인할 수 있습니다.
+
+가장 놀라운 점은 Reactive의 성능이었습니다. 
+
+개선된 버전의 파일서버 코드는 [🔗여기](https://github.com/Tiketeer/Tiketeer-File/tree/chore/UPDATE)에서 확인하실 수 있습니다.
 
 ## 주의점
 
@@ -148,6 +203,10 @@ LocalFileSystemUtil의 기능을 갖는 LocalFileStorage 라는 추상 클래스
     * 티켓팅을 등록하는 과정 자체는 자주 일어나는 상황이 아닙니다.  
     * 또한 등록되는 썸네일 또한 굳이 성능적 중요도가 큰 항목이 아닙니다.  
     * 썸네일의 용량이 크거나 부하를 줄만큼 개수가 많지 않습니다.
+3. 프론트엔드 추가작업
+    * 위 실험결과처럼 티켓팅 저장시간이 파일 저장시간보다 압도적으로 빠를경우
+      * Post 요청 후 즉시 결과창으로 Redirect 했을 때 썸네일이 나타나야 한다면 아직 준비가 안된 상태로 이미지가 깨질 수 있습니다.
+        * 프론트엔드 측에서 적절한 재시도 또는 mutation 감지 작업이 필요합니다.
       
 
 비동기로 인해서 성능적 개선을 이룬것은 좋지만 이 역시도 주의점이 숨어있습니다.
