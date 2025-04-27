@@ -18,6 +18,14 @@ pre {
   padding: 0.5em;
   font-family: monospace !important;
 
-  font-size: 0.95em ;
+  font-size: 1.03em;
   line-height: 1;
+}
+
+.highlight.font-small {
+  font-size: 0.8em !important;
+}
+
+.highlight.font-large {
+  font-size: 1.2em !important;
 }

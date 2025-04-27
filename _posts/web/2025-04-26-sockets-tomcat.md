@@ -9,83 +9,91 @@ toc: true
 
 # 배경
 
-오래전에 다음과 같은 [글](https://claycat.github.io/web_servers/)을 작성한 적이 있습니다.
+오래전에 작성했던 웹서버 포트 글에서는 왜 웹 서버가 3000번이나 8000번 같은 포트 하나만으로도 충분히 운영될 수 있는지에 대해 이야기했습니다.
 
-웹서버를 가동할 때 왜 3000번, 8000번과 같이 하나의 포트만 충분한지에 대해서 고민했던 글이었는데,
+하지만 당시에는 내용을 충분히 깊게 다루지 못했고, 더 깊게 파헤치고 싶었던 궁금증이 남아있어 이번 포스트에서 보다 심도 있게 다뤄보려고 합니다.
 
-내용이 아쉬운 부분도 있고, 당시 해결하지 못한 궁금증을 정리하고자 다시 글을 작성하게 되었습니다.
+## 소켓과 파일 디스크립터(File Descriptor)
 
-### 소켓
-
-자료들에서 나오는 응답들은 일반적으로 두가지 부류임
+소켓(socket)에 대해 찾아보면 대부분 크게 두 가지 방식으로 설명합니다:
 
 1. 네트워크 연결 엔드포인트의 추상화
-2. 네트워크 세션을 수립할 수 있는 읽고 쓸 수 있는 파일 핸들
+2. 네트워크 세션을 수립하고 읽기/쓰기를 수행할 수 있는 파일 디스크립터(file descriptor)
 
-그러면 파일 핸들러 어쩌구는 뭐임? 
+"파일 디스크립터"이라는 개념이 좀 생소할 수 있기 때문에 간단히 설명하겠습니다.
 
-이 내용을 알아두면 좋을 것 같음.
+리눅스와 같은 유닉스 기반의 운영체제는 파일을 열 때마다 시스템 내부적으로 해당 파일 자원을 가리키는 양의 정수 하나를 할당하게 됩니다.
 
-파일을 열 때, 리눅스 커널은 해당 자원을 표현하기 위해 양의 정수 하나를 배정해서 활용함
+이 숫자가 바로 **파일 디스크립터(File Descriptor, FD)**입니다.
 
-퀴즈) 파일을 열 때 운영체제는 무엇을 사용했지?
+파일 디스크립터는 생각보다 많은 곳에서 등장합니다.
+
+가장 흔하게 애플리케이션이 커널 서비스에 접근하기 위해 호출하는 ? 에서 쉽게 발견할 수 있습니다.
 
 ```typescript
-
 int fd = open("file.txt", O_RDONLY);
-read(fd, buf, n);    
-write(fd, buf, n); 
-close(fd);    
-
+ read(fd, buf, n);
+ write(fd, buf, n);
+ close(fd);
 ```
 
-그래서 왜 파일 이야기가 나왔냐 하면, 리눅스에서는 이 FD를 통해서 IO 리소스에 접근하기 때문임.
+위 코드는 파일 시스템 호출이지만, 네트워크 소켓 또한 해당 방식을 채택합니다.
 
-파일을 열든, 네트워크 소켓을 열든, 파이프를 열든 리눅스는 모두 FD라는 양의 정수 하나를 사용함.
+```typescript
+int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+ connect(sockfd, (struct sockaddr *)&addr, sizeof(addr));
 
-일종의 추상화 개념이라고 생각해도 좋음
+ write(sockfd, "hello", 5);
+ read(sockfd, buffer, 1024);
 
-리눅스가 기반으로 하는 UNIX 시스템 자체가 애초에 파일 IO를 바탕으로 시작했기 때문에 인터페이스들은 
+ close(sockfd);
+```
 
-open(), read(), write(), close()와 같이 발달했고, 네트워크가 추가됐을 때도 이를 재사용한것임
+파일을 열든, 네트워크 소켓을 열든, 파이프를 열든 리눅스는 모두 FD라는 양의 정수 하나를 사용합니다.
+
+입출력 리소스에 대한 공통 인터페이스, 즉 추상화라고 생각해도 좋습니다.
+
+물론 처음부터 이런 방식을 염두하고 만들어진건 아니었는데,
+
+이는 유닉스 계열 운영체제가 처음부터 파일 기반 입출력(File I/O) 모델을 근본적으로 채택하였고,
+
+인터페이스들은 open(), read(), write(), close()와 같이 발달하게 되었습니다.
+
+따라서 네트워크가 추가됐을 때도 해당 인터페이스들을 그대로 활용하여 일관성을 유지할 수 있었습니다.
 
 <img src="../../assets/img/2025-04-26-16-46-58.png" alt="Description" style="display:block; width:800px; margin-left:auto; margin-right:auto;"/>
 
 ### 커넥션
 
-잠깐 다른 이야기로 넘어갔는데, 다시 돌아와보겠음
+잠깐 다른 이야기로 넘어갔는데 다시 소켓과 커넥션으로 돌아오도록 하겠습니다.
 
-소켓이 연결의 엔드포인트라면 연결은 총 5가지의 속성으로 정의됨
+소켓이 연결의 엔드포인트라면 연결은 총 5가지의 속성으로 정의됩니다.
 
 1. source port
 2. source ip
 3. protocol
 4. destination port
 5. destination ip
+6. 여기서 "하나의 서버 포트(예: 3000, 8000번)만 있으면 충분하지 않은가?"라는 의문이 생길 수 있습니다.
 
-그렇다면 궁금증이 생길 수 있음
+하나의 서버가 여러개의 클라이언트를 서빙한다고 생각하면, 클라이언트의 포트와 IP는 매번 다르니까요.
 
-당연히 3000번이나 8000번 하나만으로 충분한거 아님?
+실제로는 클라이언트 하나가 같은 서버와 여러 개의 연결을 동시에 맺는 상황이 자주 발생합니다.
 
-1,2,3번은 고정되어있고 4,5번은 다른거 아닌가?
+가장 간단한 예시는 브라우저에서 두개의 탭을 띄우는 상황입니다.
 
-실제로 문제가 되는 부분은 따로 있음
-
-실제 연결 상황에서는 하나의 클라이언트가 호스트와 여러개의 연결을 맻는 상황이 다수임
-
-궁금하다면 명령어를 쳐보길 바람
+이를 직접 확인하려면 다음 명령어를 실행해보면 됩니다:
 
 `(WINDOWS) netstat -ano | findstr '443'`  
-`(MAC): netstat -an | grep 443`  
+`(MAC): netstat -an | grep 443`
+이런 문제를 해결하기 위해 클라이언트 운영체제는 **임시 포트(ephemeral port)**를 사용합니다.
 
-이 문제를 해결하기 위해서 운영체제는 저번 호스팅에서 이야기한 ephemeral port를 사용함
+중요한 점은 서버가 아니라 클라이언트가 임시 포트를 사용해 다중 연결을 관리한다는 점입니다.
 
-중요한건 호스트가 사용하는게 아니라 접속하는 클라이언트 측에서 사용한다는거임
-
-예를 들어 클라이언트가 여러개의 탭을 띄워서 웹서핑을 한다면 다음과 같이 표현될 수 있음
+예를 들어 클라이언트가 브라우저의 여러 탭에서 웹 서핑을 할 때 실제 연결 구조는 다음과 같습니다:
 
 ```typescript
- 
+
 Client_IP:54321 <--> Server_IP:443
 Client_IP:54322 <--> Server_IP:443
 Client_IP:54323 <--> Server_IP:443
@@ -97,82 +105,182 @@ Client_IP:54323 <--> Server_IP:443
 > 쉬어가기 - Processes and ThreadsPermalink  
 > 옛날 웹서버들은 사실 하나의 연결당 하나의 프로세스를 배정하는 process-per-connection 정책을 사용하였다.  
 > 다만 IPC와 프로세스 생성 / 해제의 오버헤드로 인해 프로세스가 아닌 스레드를 배정하는  
-> thread-per-connection 정책을 사용하거나, nodejs와 같은 비동기 방식을 채택하였다.  
+> thread-per-connection 정책을 사용하거나, nodejs와 같은 비동기 방식을 채택하였다.
 
 > HTTP/1.1 - Connection OverheadPermalink  
 > 연결 요청마다 매번 새로운 소켓을 생성하고 TCP 요청을 수립하는것은 당연히 비효율적일 것이다.  
-> 이를 해결하기 위해 HTTP/1.1 스펙에서는 Keep-alive라는 옵션이 추가되어, 연결을 재사용하는것이 가능하게 되었다.  
+> 이를 해결하기 위해 HTTP/1.1 스펙에서는 Keep-alive라는 옵션이 추가되어, 연결을 재사용하는것이 가능하게 되었다.
 
 > KeepAlive & Thread per request?  
 > HTTP/1.1의 KeepAlive는 추가적인 요청에 대해서 연결을 재활용하기 위해 바로 스레드가 반납되지 않고 잠깐 살아있게 된다.  
-> 이게 Thread per request 모델과 공생이 가능할까?  
+> 이게 Thread per request 모델과 공생이 가능할까?
 
-RFC는 딱히 연결을 처리하는 모델에 대한 표준을 정의하고 있지 않지만, 대부분의 현대 웹서버들은 Thread-Per-Request 모델을 채택하고 있음
+RFC는 연결 처리 모델의 표준을 정의하지 않았지만, 현대 웹서버들은 대부분 Thread-Per-Request 모델을 채택하고 있습니다.
 
-위 의문을 해결하기 위해서는 운영체제가 담당하는 연결의 범위와 웹서버(톰캣)이 담당하는 연결의 범위를 알아야 함
+위 의문을 해결하기 위해서는 운영체제가 담당하는 연결의 범위와 웹서버(톰캣)이 담당하는 연결의 범위를 알 필요가 있습니다.
 
-가장 우선적으로, 연결에 대한 권한은 운영체제의 TCP/IP 스택이 갖고 있음
-우리에게 익숙한 3-way handshake 부터, SYN과 ACK 큐를 관리하고 소켓에 대한 상태관리 또한 전담하고 있음
+가장 우선적으로, 연결에 대한 권한은 운영체제의 TCP/IP 스택이 갖고 있습니다.
 
-이제 연결에 대한 처리는 톰캣으로 넘어감  
+우리에게 익숙한 3-way handshake 부터, SYN과 ACK 큐를 관리하고 소켓에 대한 상태관리 또한 전담하고 있습니다.
 
-톰캣의 역사와 함께 단계적으로 다루어 보도록 하겠음
+이제 연결에 대한 처리는 톰캣으로 넘어가게 됩니다.
+
+톰캣의 역사와 함께 단계적으로 다루어 보도록 하겠습니다.
 
 ## 톰캣
 
-### 구성요소
+### Connector
 
-#### Connector
+Connector는 톰캣이 HTTP 요청을 처리하기 위해 사용하는 핵심 모듈입니다. 주요 역할은 다음과 같습니다:
 
-톰캣의 진화는 Connector라는 중심 컴포넌트를 바탕으로 설명할 수 있음
+포트 바인딩: 지정된 TCP 포트(예: 8080, 8443 등)에 바인딩하여 클라이언트 연결을 수신
 
-Connector의 역할은 TCP 포트를 바인딩하고 스레드 풀을 관리함
+스레드 풀 관리: 클라이언트 요청 처리용 worker thread를 생성·관리
 
-다양한 구현체가 존재함
+프로토콜 핸들링: HTTP, AJP 등 다양한 프로토콜 지원
+
+Connector 구현체는 아래와 같이 나뉘게 됩니다.
 
 1. Http11Protocol (BIO) (Blocking IO)
 2. Http11AprProtocol (APR) (Native APR)
 3. Http11NioProtocol (NIO) (Non-blocking)
 
 IntelliJ와 같은 최신 IDE들의 경우 톰캣에 대한 설정들을 대부분 자체적으로 처리해주기 때문에 크게 신경쓸 일이 없지만,  
-직접 톰캣을 설치해본적이 있다면 server.xml 이라는 파일 아래에 명시되어있음.
+직접 톰캣을 설치해본적이 있다면 server.xml 이라는 파일 아래에 명시되어있습니다.
+
+예를 들어:
+
+```typescript
+<Connector
+  port="8080"
+  protocol="HTTP/1.1"
+  maxThreads="200"
+  connectionTimeout="20000"
+  redirectPort="8443"
+/>
+```
 
 그 밖에도 컴포넌트들이 존재함
 
-#### Worker Thread
+### Worker Thread
 
-maxThread 값으로 정의된 쓰레드 풀.  
-HTTP 요청이 들어오면 요청 파싱 - servlet 전달 - 응답 후 다시 풀로 돌아감
+Connector가 수락한 연결은 worker thread 풀로 전달됩니다. 기본 흐름은 다음과 같습니다:
+
+Accept: OS 커널의 TCP/IP 스택이 3-way 핸드쉐이크를 처리
+
+Socketchannel 래핑: Connector가 소켓을 Java SocketChannel로 감싸기
+
+스레드 할당: 사용 가능한 worker thread가 할당되어 요청을 Request 객체로 파싱
+
+서블릿 실행: 적절한 서블릿(또는 필터)으로 요청 위임
+
+응답 전송: 처리된 응답을 클라이언트에게 전송
+
+스레드 반환: 작업 완료 후 스레드를 풀로 반환
+
+이를 통해 톰캣은 다수의 동시 연결을 효율적으로 관리합니다.
+
+## I/O 모델 비교
 
 ### BIO
 
-하나의 쓰레드가 하나의 연결을 전담하여 처리함
+하나의 쓰레드가 하나의 연결을 전담하여 처리.
 
 즉, 쓰레드가 소켓을 직접 받고 응답할때까지 IO를 모두 Blocking함
 
-그래서 Blocking IO이며, 예상대로 높은 동시 다발적 요청에는 효율이 떨어짐.
+그래서 Blocking IO이며, 예상대로 높은 동시 다발적 요청에는 효율이 떨어집니다.
 
-톰캣 9부터는 지원종료
+톰캣 9부터는 지원이 종료되었습니다.
 
 ### APR
 
-BIO와 동일하게 연결당 쓰레드가 할당 + 약간의 최적화
+네이티브 APR 라이브러리를 이용한 블로킹 I/O로, C 레벨에서 최적화된 소켓 처리가 가능합니다.
+
+순수 Java 대비 성능이 개선되었지만, 여전히 Blocking 이라는 문제가 존재합니다.
 
 ### NIO
 
-톰캣 6부터 등장한 논블로킹 커넥터.
+톰캣 6에서 도입된 논블로킹 커넥터로, 비동기 이벤트 기반 처리를 통해 높은 동시성을 지원합니다.
 
 커넥터가 관리하는 쓰레드 풀에서 Acceptor와 Poller 쓰레드가 분리됨.
 
-1. Acceptor 쓰레드는 소켓을 SocketChannel로 감싸고 Selector에 등록하는 함수인 accept() 만을 담당
-2. Poller 쓰레드는 채널의 IO가 준비될 때 Selector.select()를 호출하는 역할
-3. SocketProcessor Task가 worker pool로 넘겨져서 실제 HTTP 요청을 받고 응답까지 이어나감
+1. Acceptor: ServerSocketChannel.accept()로 연결 요청 감지
+2. Poller: Selector.select()로 I/O 준비된 채널 감지
+3. SocketProcessor: SocketProcessor가 worker pool에 요청 전달 후 처리
+
+&nbsp;
 
 <img src="../../assets/img/2025-04-26-21-51-40.png" alt="Description" style="display:block; width:600px; margin-left:auto; margin-right:auto;"/>
 
-
-#### 그럼 이거 Node랑 비슷한거 아님?
-
 <img src="../../assets/img/2025-04-26-21-46-34.png" alt="Description" style="display:block; width:600px; margin-left:auto; margin-right:auto;"/>
 
-### 부록: Netty? Jetty? WebFlux?
+## 그럼 Node랑 비슷한거 아님?
+
+## 부록: Netty? Jetty? WebFlux?
+
+```java
+protected class Acceptor extends AbstractEndpoint.Acceptor {
+    @Override
+    public void run() {
+        while (running) {
+            countUpOrAwaitConnection();
+            SocketChannel socket = serverSock.accept();  // 이부분만 블로킹
+            if (!setSocketOptions(socket)) {             // NIO 등록
+                countDownConnection();
+                closeSocket(socket);
+            }
+        }
+        state = AcceptorState.ENDED;
+    }
+}
+
+protected boolean setSocketOptions(SocketChannel socket) {
+    socket.configureBlocking(false);
+
+    //SSL관련은 생략
+
+    NioChannel channel = new NioChannel(socket, this);
+
+    getPoller0().register(channel);
+    return true;
+}
+
+public class Poller implements Runnable {
+    @Override
+    public void run() {
+        while (!close) {
+            selector.select();                         // epoll()/kqueue() syscall
+            for (SelectionKey key : selector.selectedKeys()) {
+                selectedKeys.remove(key);
+                PollerEvent pe = (PollerEvent) key.attachment();
+                pe.run();                              // handle OP_READ/OP_WRITE
+            }
+        }
+    }
+}
+
+protected boolean processSocket(KeyAttachment att,
+                                SocketStatus status,
+                                boolean dispatch) {
+    SocketProcessor sc = processorCache.pop();
+    if (dispatch && getExecutor() != null) {
+        getExecutor().execute(sc);                // hand off to worker
+    } else {
+        sc.run();
+    }
+    return true;
+}
+
+//SocketProcessorBase.java
+@Override
+public final void run() {
+    Lock lock = socketWrapper.getLock();
+    lock.lock();
+    try {
+        doRun();       // implemented by NioEndpoint.SocketProcessor
+    } finally {
+        lock.unlock();
+    }
+}
+protected abstract void doRun();
+```
