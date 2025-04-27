@@ -477,7 +477,7 @@ System.out.println("트랜잭션 활성 상태: " + isActive);
 
 <img src="../../assets/img/2025-03-23-19-51-25.png" alt="Description" style="display:block; width:1000px; margin-left:auto; margin-right:auto;"/>
 
-### 그래서 TransactionSynchronizationManager는 신인가?
+### 그래서?
 
 작은 스코프에서는 TransactionSynchronizationManager를 이용한 접근 방식은 트랜잭션이 성공적으로 커밋된 이후에만 메시지를 발행하게 하여 데이터 일관성 문제를 어느 정도 해결할 수 있습니다.  
 
