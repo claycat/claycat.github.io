@@ -26,6 +26,8 @@ toc: true
 
 이 숫자가 바로 **파일 디스크립터(File Descriptor, FD)**입니다.
 
+<img src="../../assets/img/2025-04-26-21-51-41.png" alt="Description" style="display:block; width:600px; margin-left:auto; margin-right:auto;"/>
+
 파일 디스크립터는 생각보다 많은 곳에서 등장합니다.
 
 가장 흔하게 애플리케이션이 커널 서비스에 접근하기 위해 호출하는 ? 에서 쉽게 발견할 수 있습니다.
@@ -160,7 +162,7 @@ IntelliJ와 같은 최신 IDE들의 경우 톰캣에 대한 설정들을 대부�
 />
 ```
 
-그 밖에도 컴포넌트들이 존재함
+그 밖에도 컴포넌트들이 존재합니다.
 
 ### Worker Thread
 
@@ -184,7 +186,7 @@ Socketchannel 래핑: Connector가 소켓을 Java SocketChannel로 감싸기
 
 ### BIO
 
-하나의 쓰레드가 하나의 연결을 전담하여 처리.
+하나의 쓰레드가 하나의 연결을 전담하여 처리합니다.
 
 즉, 쓰레드가 소켓을 직접 받고 응답할때까지 IO를 모두 Blocking함
 
@@ -202,7 +204,7 @@ Socketchannel 래핑: Connector가 소켓을 Java SocketChannel로 감싸기
 
 톰캣 6에서 도입된 논블로킹 커넥터로, 비동기 이벤트 기반 처리를 통해 높은 동시성을 지원합니다.
 
-커넥터가 관리하는 쓰레드 풀에서 Acceptor와 Poller 쓰레드가 분리됨.
+커넥터가 관리하는 쓰레드 풀에서 Acceptor와 Poller 쓰레드가 분리되었습니다.
 
 1. Acceptor: ServerSocketChannel.accept()로 연결 요청 감지
 2. Poller: Selector.select()로 I/O 준비된 채널 감지
@@ -210,77 +212,14 @@ Socketchannel 래핑: Connector가 소켓을 Java SocketChannel로 감싸기
 
 &nbsp;
 
+<img src="../../assets/img/2025-04-26-21-51-42.png" alt="Description" style="display:block; width:1000px; margin-left:auto; margin-right:auto;"/>
+
 <img src="../../assets/img/2025-04-26-21-51-40.png" alt="Description" style="display:block; width:600px; margin-left:auto; margin-right:auto;"/>
 
 <img src="../../assets/img/2025-04-26-21-46-34.png" alt="Description" style="display:block; width:600px; margin-left:auto; margin-right:auto;"/>
 
-## 그럼 Node랑 비슷한거 아님?
+# 생각할 거리
 
-## 부록: Netty? Jetty? WebFlux?
+### 그럼 Node랑 비슷한거 아님?
 
-```java
-protected class Acceptor extends AbstractEndpoint.Acceptor {
-    @Override
-    public void run() {
-        while (running) {
-            countUpOrAwaitConnection();
-            SocketChannel socket = serverSock.accept();  // 이부분만 블로킹
-            if (!setSocketOptions(socket)) {             // NIO 등록
-                countDownConnection();
-                closeSocket(socket);
-            }
-        }
-        state = AcceptorState.ENDED;
-    }
-}
-
-protected boolean setSocketOptions(SocketChannel socket) {
-    socket.configureBlocking(false);
-
-    //SSL관련은 생략
-
-    NioChannel channel = new NioChannel(socket, this);
-
-    getPoller0().register(channel);
-    return true;
-}
-
-public class Poller implements Runnable {
-    @Override
-    public void run() {
-        while (!close) {
-            selector.select();                         // epoll()/kqueue() syscall
-            for (SelectionKey key : selector.selectedKeys()) {
-                selectedKeys.remove(key);
-                PollerEvent pe = (PollerEvent) key.attachment();
-                pe.run();                              // handle OP_READ/OP_WRITE
-            }
-        }
-    }
-}
-
-protected boolean processSocket(KeyAttachment att,
-                                SocketStatus status,
-                                boolean dispatch) {
-    SocketProcessor sc = processorCache.pop();
-    if (dispatch && getExecutor() != null) {
-        getExecutor().execute(sc);                // hand off to worker
-    } else {
-        sc.run();
-    }
-    return true;
-}
-
-//SocketProcessorBase.java
-@Override
-public final void run() {
-    Lock lock = socketWrapper.getLock();
-    lock.lock();
-    try {
-        doRun();       // implemented by NioEndpoint.SocketProcessor
-    } finally {
-        lock.unlock();
-    }
-}
-protected abstract void doRun();
-```
+### MVC 모델은 Async/NonBlocking이 가능한가?
