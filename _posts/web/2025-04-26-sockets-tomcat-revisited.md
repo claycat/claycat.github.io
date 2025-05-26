@@ -1,13 +1,11 @@
 ---
-title: 톰캣
+title: 웹 서버와 포트, 소켓, 그리고 스레드 Revisited
 date: 2025-04-26 12:00:00 +/-TTTT
 categories:
 comments: true
 tags:
 toc: true
 ---
-
-# 배경
 
 오래전에 작성했던 웹서버 포트 글에서는 왜 웹 서버가 3000번이나 8000번 같은 포트 하나만으로도 충분히 운영될 수 있는지에 대해 이야기했습니다.
 
